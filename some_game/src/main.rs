@@ -47,6 +47,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         if input.key_down(Key::Space) {
             weapon_position.x += RANGE;
         }
+
         let weapon_hit_enemy: bool =
             weapon_position.y <= enemy_position.y+24.0
             && enemy_position.y <= weapon_position.y+24.0
@@ -55,10 +56,36 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             && input.key_down(Key::Space);
         
         let enemy_hit_player: bool = (
-            (enemy_position.x - player_position.x) * (enemy_position.x - player_position.x)
-            + 
-            (enemy_position.y - player_position.y) * (enemy_position.y - player_position.y)
-        ).sqrt() <= 32.0;
+                (
+                    (enemy_position.x - player_position.x) * (enemy_position.x - player_position.x)
+                    +    
+                    (enemy_position.y - player_position.y) * (enemy_position.y - player_position.y)
+                ).sqrt() <= 32.0
+            )
+            ||
+            (
+                (
+                    (enemy_position.x+24.0 - player_position.x) * (enemy_position.x+24.0 - player_position.x)
+                    +    
+                    (enemy_position.y+24.0 - player_position.y) * (enemy_position.y+24.0 - player_position.y)
+                ).sqrt() <= 32.0
+            )
+            ||
+            (
+                (
+                    (enemy_position.x+24.0 - player_position.x) * (enemy_position.x+24.0 - player_position.x)
+                    +    
+                    (enemy_position.y - player_position.y) * (enemy_position.y - player_position.y)
+                ).sqrt() <= 32.0
+            )
+            ||
+            (
+                (
+                    (enemy_position.x - player_position.x) * (enemy_position.x - player_position.x)
+                    +    
+                    (enemy_position.y+24.0 - player_position.y) * (enemy_position.y+24.0 - player_position.y)
+                ).sqrt() <= 32.0
+            );
 
         if weapon_hit_enemy {
             enemy_color = Color::BLUE;
