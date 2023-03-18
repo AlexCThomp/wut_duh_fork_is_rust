@@ -1,7 +1,6 @@
 mod quick_maffs;
 
-// Example 8: Input
-// Respond to user keyboard and mouse input onscreen
+
 use quicksilver::{
     geom::{Circle, Rectangle, Vector},
     graphics::Color,
@@ -20,14 +19,14 @@ fn main() {
 }
 
 async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> {
-    // Keep track of the position of the square
+    
     let mut player_position = Vector::new(300.0, 300.0);
     let enemy_position = Vector::new(600.0, 300.0);
     
     
     loop {
         while let Some(_) = input.next_event().await {}
-        // Check the state of the keys, and move the square accordingly
+        
         const SPEED: f32 = 2.0;
         const RANGE: f32 = 24.0;
         let mut weapon_position = Vector::new(player_position.x+32.0, player_position.y-12.0);
@@ -50,6 +49,10 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             weapon_position.x += RANGE;
         }
 
+        let player_shape: Circle = Circle::new(player_position, 32.0);
+        let enemy_shape: Rectangle = Rectangle::new(enemy_position, Vector::new(24.0, 24.0));
+        let weapon_shape: Rectangle = Rectangle::new(weapon_position, Vector::new(24.0, 24.0));
+
         let weapon_hit_enemy: bool =
             weapon_position.y <= enemy_position.y+24.0
             && enemy_position.y <= weapon_position.y+24.0
@@ -57,47 +60,25 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             && enemy_position.x <= weapon_position.x+24.0
             && input.key_down(Key::Space);
         
-        let enemy_hit_player: bool = (
-                quick_maffs::distance(player_position, enemy_position) <= 32.0
-            )
-            ||
-            (quick_maffs::distance(
-                    player_position, 
-                    Vector::new(enemy_position.x+24.0, enemy_position.y+24.0)
-                ) <= 32.0)
-            ||
-            (quick_maffs::distance(
-                player_position, 
-                Vector::new(enemy_position.x+24.0, enemy_position.y)
-            ) <= 32.0)
-            ||
-            (quick_maffs::distance(
-                player_position, 
-                Vector::new(enemy_position.x, enemy_position.y+24.0)
-            ) <= 32.0);
+
+
+        if quick_maffs::collision_rectangle_circle(player_shape, enemy_shape) {
+            player_color = Color::RED;
+        }
 
         if weapon_hit_enemy {
             enemy_color = Color::BLUE;
         }
-        if enemy_hit_player {
-            player_color = Color::RED;
-        }
         
         gfx.clear(Color::WHITE);    
         // Draw player
-        gfx.fill_circle(&Circle::new(player_position, 32.0), player_color);
+        gfx.fill_circle(&player_shape, player_color);
 
         // Draw weapon
-        gfx.fill_rect(
-            &Rectangle::new(weapon_position, Vector::new(24.0, 24.0)),
-            Color::ORANGE,
-        );
+        gfx.fill_rect(&weapon_shape, Color::ORANGE);
 
         //Draw enemy
-        gfx.fill_rect(
-            &Rectangle::new(enemy_position, Vector::new(24.0, 24.0)),
-            enemy_color,
-        );
+        gfx.fill_rect(&enemy_shape, enemy_color);
 
         gfx.present(&window)?;
     }
