@@ -1,3 +1,5 @@
+mod quick_maffs;
+
 // Example 8: Input
 // Respond to user keyboard and mouse input onscreen
 use quicksilver::{
@@ -56,36 +58,23 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             && input.key_down(Key::Space);
         
         let enemy_hit_player: bool = (
-                (
-                    (enemy_position.x - player_position.x) * (enemy_position.x - player_position.x)
-                    +    
-                    (enemy_position.y - player_position.y) * (enemy_position.y - player_position.y)
-                ).sqrt() <= 32.0
+                quick_maffs::distance(player_position, enemy_position) <= 32.0
             )
             ||
-            (
-                (
-                    (enemy_position.x+24.0 - player_position.x) * (enemy_position.x+24.0 - player_position.x)
-                    +    
-                    (enemy_position.y+24.0 - player_position.y) * (enemy_position.y+24.0 - player_position.y)
-                ).sqrt() <= 32.0
-            )
+            (quick_maffs::distance(
+                    player_position, 
+                    Vector::new(enemy_position.x+24.0, enemy_position.y+24.0)
+                ) <= 32.0)
             ||
-            (
-                (
-                    (enemy_position.x+24.0 - player_position.x) * (enemy_position.x+24.0 - player_position.x)
-                    +    
-                    (enemy_position.y - player_position.y) * (enemy_position.y - player_position.y)
-                ).sqrt() <= 32.0
-            )
+            (quick_maffs::distance(
+                player_position, 
+                Vector::new(enemy_position.x+24.0, enemy_position.y)
+            ) <= 32.0)
             ||
-            (
-                (
-                    (enemy_position.x - player_position.x) * (enemy_position.x - player_position.x)
-                    +    
-                    (enemy_position.y+24.0 - player_position.y) * (enemy_position.y+24.0 - player_position.y)
-                ).sqrt() <= 32.0
-            );
+            (quick_maffs::distance(
+                player_position, 
+                Vector::new(enemy_position.x, enemy_position.y+24.0)
+            ) <= 32.0);
 
         if weapon_hit_enemy {
             enemy_color = Color::BLUE;
