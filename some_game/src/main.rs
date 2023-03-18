@@ -1,8 +1,7 @@
 mod quick_maffs;
 
-
 use quicksilver::{
-    geom::{Circle, Rectangle, Vector},
+    geom::{Circle, Rectangle, Vector, Shape},
     graphics::Color,
     input::Key,
     run, Graphics, Input, Result, Settings, Window,
@@ -53,20 +52,11 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         let enemy_shape: Rectangle = Rectangle::new(enemy_position, Vector::new(24.0, 24.0));
         let weapon_shape: Rectangle = Rectangle::new(weapon_position, Vector::new(24.0, 24.0));
 
-        let weapon_hit_enemy: bool =
-            weapon_position.y <= enemy_position.y+24.0
-            && enemy_position.y <= weapon_position.y+24.0
-            && weapon_position.x <= enemy_position.x+24.0
-            && enemy_position.x <= weapon_position.x+24.0
-            && input.key_down(Key::Space);
-        
-
-
-        if quick_maffs::collision_rectangle_circle(player_shape, enemy_shape) {
+        if player_shape.overlaps_rectangle(&enemy_shape) {
             player_color = Color::RED;
         }
 
-        if weapon_hit_enemy {
+        if weapon_shape.overlaps_rectangle(&enemy_shape) && input.key_down(Key::Space) {
             enemy_color = Color::BLUE;
         }
         
