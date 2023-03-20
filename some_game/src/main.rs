@@ -23,7 +23,7 @@ use quicksilver::{
 fn main() {
     run(
         Settings {
-            title: "Input Example",
+            title: "some_game",
             ..Settings::default()
         },
         app,
