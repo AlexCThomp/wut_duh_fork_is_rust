@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use quicksilver::geom::{Vector, Rectangle, Shape};
+use quicksilver::graphics::Color;
 
+use crate::GameObject;
 use crate::weapon::Weapon;
-// use crate::weapon::Weapon;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum WeaponState {
@@ -24,15 +25,17 @@ pub struct Character {
     direction: Direction,
     weapon_state: WeaponState,
     speed: f32,
+    color: Color,
 }
 
 impl Character{
-    pub fn new() -> Character{
-        let new_sprite = Rectangle::new(Vector::new(300.0, 300.0), Vector::new(32.0, 32.0));
+    pub fn new(position: Vector, size: Vector, new_color: Color) -> Character {
+        let new_sprite = Rectangle::new(position, size);
         let new_weapon = Weapon::new(
             Rectangle::new(Vector::new(new_sprite.pos.x + new_sprite.size().x, new_sprite.pos.y - 12.0), 
             Vector::new(24.0, 24.0)),
-            24.0);
+            24.0,
+            Color::ORANGE,);
 
         Character {
             sprite: new_sprite,
@@ -40,22 +43,15 @@ impl Character{
             weapon: new_weapon,
             weapon_state: WeaponState::Default,
             speed: 2.0,
+            color: new_color,
         }
     }
 
-    pub fn sprite(&mut self) -> Rectangle {
-        self.sprite
-    }
-
-    pub fn size(&mut self) -> Vector {
-        self.sprite.size
-    }
-
-    pub fn weapon(&mut self) -> Weapon {
+    pub fn weapon(&self) -> Weapon {
         self.weapon
     }
 
-    pub fn weapon_state(&mut self) -> WeaponState {
+    pub fn weapon_state(&self) -> WeaponState {
         self.weapon_state
     }
 
@@ -148,8 +144,49 @@ impl Character{
         weapon_positions[&direction][&state]
     }
 
-    pub fn collides_with(&mut self, other_sprite: Rectangle) -> bool {
-        self.sprite.overlaps_rectangle(&other_sprite)
+    pub fn move_towards(&mut self, target_location: Vector) {
+    
+        if target_location.x < self.sprite.pos.x {
+            self.move_left();
+        }
+        if target_location.x > self.sprite.pos.x {
+            self.move_right();
+        }
+        if target_location.y < self.sprite.pos.y {
+            self.move_up();
+        }
+        if target_location.y > self.sprite.pos.y {
+            self.move_down();
+        }
+        
+    }
+
+}
+
+impl GameObject for Character {
+    
+    fn color(&self) -> Color {
+        self.color
+    }
+
+    fn set_color(&mut self, new_color: Color) {
+        self.color = new_color;
+    }
+
+    fn sprite(&self) -> Rectangle {
+        self.sprite
+    }
+
+    fn size(&self) -> Vector {
+        self.sprite.size
+    }
+
+    fn position(&self) -> Vector {
+        self.sprite.pos
+    }
+
+    fn collides_with<T: GameObject>(&self, other_object: &T) -> bool {
+        self.sprite.overlaps_rectangle(&other_object.sprite())
     }
 
 }
