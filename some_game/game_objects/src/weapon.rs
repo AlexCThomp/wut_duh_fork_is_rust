@@ -1,24 +1,24 @@
-use quicksilver::{geom::{Vector, Rectangle, Shape}, graphics::Color};
+use quicksilver::{geom::{Vector, Rectangle, Shape}, graphics::{Color, Image}};
 
 use crate::GameObject;
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct Weapon{
     range: f32,
     sprite: Rectangle,
-    color: Color,
+    image: Image,
 }
 
 
 
 impl Weapon {
 
-    pub fn new(new_sprite: Rectangle, new_range: f32, new_color: Color) -> Weapon {
+    pub fn new(new_sprite: Rectangle, new_range: f32, new_image: Image) -> Weapon {
         
         Weapon {
             sprite: new_sprite,
             range: new_range,
-            color: new_color,
+            image: new_image,
         }
     }
 
@@ -33,12 +33,12 @@ impl Weapon {
 
 impl GameObject for Weapon {
     
-    fn color(&self) -> Color {
-        self.color
+    fn image(&self) -> &Image {
+        &self.image
     }
 
-    fn set_color(&mut self, new_color: Color) {
-        self.color = new_color;
+    fn set_image(&mut self, new_image: Image) {
+        self.image = new_image;
     }
 
     fn sprite(&self) -> Rectangle {

@@ -5,7 +5,7 @@ use game_objects::{character::{
 
 use quicksilver::{
     geom::{Vector},
-    graphics::Color,
+    graphics::{Color, Image},
     input::Key,
     run, Graphics, Input, Result, Settings, Window,
 };
@@ -21,24 +21,29 @@ fn main() {
 }
 
 async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> {
+    let player_image = Image::load(&gfx, r"green_circle.png").await?;
+    let enemy_image = Image::load(&gfx, r"green_circle.png").await?;
+    let weapon_image = Image::load(&gfx, r"green_circle.png").await?;
+    let death_image = Image::load(&gfx, r"red_x.png").await?;
     
     let mut player = Character::new(
         Vector::new(300.0, 300.0), 
         Vector::new(32.0,32.0), 
-        Color::BLUE,
+        player_image.clone(),
+        weapon_image,
     );
 
-    let mut enemy = Character::new(
+    let mut enemy = Character::new_no_weapon(
         Vector::new(600.0, 300.0), 
         Vector::new(40.0, 40.0), 
-        Color::RED,
+        enemy_image.clone(),
     );
     
     loop {
         while let Some(_) = input.next_event().await {}
         
-        player.set_color(Color::BLUE);
-        enemy.set_color(Color::RED);
+        player.set_image(player_image.clone());
+        enemy.set_image(enemy_image.clone());
 
         player.un_attack();
 
@@ -59,24 +64,24 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         }
 
         if player.collides_with(&enemy) {
-            player.set_color(enemy.color());
+            player.set_image(death_image.clone());
         }
 
         if player.weapon().collides_with(&enemy) && player.weapon_state() == WeaponState::Attack {
-            enemy.set_color(player.color());
+            enemy.set_image(death_image.clone());
         }
         
         enemy.move_towards(player.position());
 
         gfx.clear(Color::WHITE);    
         // Draw player
-        gfx.fill_rect(&player.sprite(), player.color());
+        gfx.draw_image(&player.image(), player.sprite());
 
         // Draw weapon
-        gfx.fill_rect(&player.weapon().sprite(), player.weapon().color());
+        gfx.draw_image(&player.weapon().image() ,player.weapon().sprite());
 
         //Draw enemy
-        gfx.fill_rect(&enemy.sprite(), enemy.color());
+        gfx.draw_image(&enemy.image(), enemy.sprite());
 
         gfx.present(&window)?;
     }
