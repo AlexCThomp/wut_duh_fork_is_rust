@@ -2,8 +2,7 @@ use std::collections::HashMap;
 use quicksilver::geom::{Vector, Rectangle, Shape};
 use quicksilver::graphics::{Image};
 
-use crate::GameObject;
-use crate::wall::Wall;
+use crate::{GameObject, GameObjectType};
 use crate::weapon::Weapon;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
@@ -27,15 +26,17 @@ pub struct Character {
     weapon_state: Option<WeaponState>,
     speed: f32,
     image: Image,
+    collidable: bool,
 }
 
 impl Character{
-    pub fn new(position: Vector, size: Vector, new_image: Image, weapon_image: Image) -> Character {
+    pub fn new(position: Vector, new_image: Image, weapon_image: Image) -> Character {
+        let size = Vector::new(32.0, 32.0);
         let new_sprite = Rectangle::new(position, size);
         let new_weapon = Weapon::new(
-            Rectangle::new(Vector::new(new_sprite.pos.x + new_sprite.size().x, new_sprite.pos.y - 12.0), 
-            Vector::new(24.0, 24.0)),
-            24.0,
+            Rectangle::new(Vector::new(new_sprite.pos.x + new_sprite.size().x, new_sprite.pos.y - 16.0), 
+            size),
+            32.0,
             weapon_image,
         );
 
@@ -46,10 +47,12 @@ impl Character{
             weapon_state: Some(WeaponState::Default),
             speed: 2.0,
             image: new_image,
+            collidable: true,
         }
     }
 
-    pub fn new_no_weapon(position: Vector, size: Vector, new_image: Image) -> Character {
+    pub fn new_no_weapon(position: Vector, new_image: Image, is_collidable: bool) -> Character {
+        let size = Vector::new(32.0, 32.0);
         let new_sprite = Rectangle::new(position, size);
         
         Character {
@@ -59,6 +62,19 @@ impl Character{
             weapon_state: None,
             speed: 2.0,
             image: new_image,
+            collidable: is_collidable,
+        }
+    }
+
+    pub fn new_of_type(position: Vector, new_image: Image, weapon_image: Option<Image>, game_obj_type: GameObjectType) -> Character {
+        if game_obj_type == GameObjectType::Player {
+            return Character::new(position, new_image, weapon_image.expect("need a weapon image"));
+        }
+        else if game_obj_type == GameObjectType::Floor {
+            return Character::new_no_weapon(position, new_image, false);
+        }
+        else {
+            return Character::new_no_weapon(position, new_image, true);
         }
     }
 
@@ -91,13 +107,13 @@ impl Character{
         
     }
 
-    pub fn move_up(&mut self, game_map: &Vec<Wall>) {
+    pub fn move_up(&mut self, game_map: &Vec<Character>) {
 
         self.direction = Direction::Up;
         self.sprite.pos.y -= self.speed;
 
-        for wall in game_map{
-            let collision_detected = self.collides_with(wall);
+        for map_element in game_map{
+            let collision_detected = self.collides_with(map_element);
             if collision_detected {
                 self.sprite.pos.y += self.speed;
                 break
@@ -113,12 +129,12 @@ impl Character{
         weapon.set_position(new_weapon_position);
     }
 
-    pub fn move_down(&mut self, game_map: &Vec<Wall>) {
+    pub fn move_down(&mut self, game_map: &Vec<Character>) {
         self.sprite.pos.y += self.speed;
         self.direction = Direction::Down;
         
-        for wall in game_map{
-            let collision_detected = self.collides_with(wall);
+        for map_element in game_map{
+            let collision_detected = self.collides_with(map_element);
             if collision_detected {
                 self.sprite.pos.y -= self.speed;
                 break
@@ -134,12 +150,12 @@ impl Character{
         weapon.set_position(new_weapon_position);
     }
 
-    pub fn move_left(&mut self, game_map: &Vec<Wall>) {
+    pub fn move_left(&mut self, game_map: &Vec<Character>) {
         self.sprite.pos.x -= self.speed;
         self.direction = Direction::Left;
         
-        for wall in game_map{
-            let collision_detected = self.collides_with(wall);
+        for character in game_map{
+            let collision_detected = self.collides_with(character);
             if collision_detected {
                 self.sprite.pos.x += self.speed;
                 break
@@ -155,12 +171,12 @@ impl Character{
         weapon.set_position(new_weapon_position);
     }
 
-    pub fn move_right(&mut self, game_map: &Vec<Wall>) {
+    pub fn move_right(&mut self, game_map: &Vec<Character>) {
         self.sprite.pos.x += self.speed;
         self.direction = Direction::Right;
         
-        for wall in game_map{
-            let collision_detected = self.collides_with(wall);
+        for map_element in game_map{
+            let collision_detected = self.collides_with(map_element);
             if collision_detected {
                 self.sprite.pos.x -= self.speed;
                 break
@@ -227,7 +243,7 @@ impl Character{
         weapon_positions[&direction][&state]
     }
 
-    pub fn move_towards(&mut self, target_location: Vector, game_map: &Vec<Wall>) {
+    pub fn move_towards(&mut self, target_location: Vector, game_map: &Vec<Character>) {
     
         if target_location.x < self.sprite.pos.x {
             self.move_left(game_map);
@@ -272,8 +288,15 @@ impl GameObject for Character {
         self.sprite.pos
     }
 
+    fn is_collidable(&self) -> bool {
+        self.collidable
+    }
+
     fn collides_with<T: GameObject>(&self, other_object: &T) -> bool {
-        self.sprite.overlaps_rectangle(&other_object.sprite())
+        if other_object.is_collidable(){
+            return self.sprite.overlaps_rectangle(&other_object.sprite());
+        }
+        false
     }
 
 }

@@ -29,22 +29,21 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     let weapon_image = Image::load(&gfx, r"green_circle.png").await?;
     let death_image = Image::load(&gfx, r"red_x.png").await?;
     let wall_image = Image::load(&gfx, r"wall.png").await?;
+    let floor_image = Image::load(&gfx, r"floor.png").await?;
 
-    let game_map = GameMap::new(wall_image);
+    let game_map = GameMap::new(wall_image, floor_image);
     
     let mut player = Character::new(
-        Vector::new(300.0, 300.0), 
-        Vector::new(32.0,32.0), 
+        Vector::new(32.0, 32.0),  
         player_image.clone(),
         weapon_image,
     );
 
     let mut enemy = Character::new_no_weapon(
         Vector::new(600.0, 300.0), 
-        Vector::new(40.0, 40.0), 
         enemy_image.clone(),
+        true,
     );
-    enemy.set_speed(1.0);
     
     loop {
         while let Some(_) = input.next_event().await {}
@@ -82,8 +81,8 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
 
         gfx.clear(Color::WHITE);
         // Draw Map
-        for wall in game_map.map() {
-            gfx.draw_image(wall.image(), wall.sprite())
+        for tile in game_map.map() {
+            gfx.draw_image(tile.image(), tile.sprite())
         }
 
         // Draw player

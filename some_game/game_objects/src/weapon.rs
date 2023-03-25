@@ -7,6 +7,7 @@ pub struct Weapon{
     range: f32,
     sprite: Rectangle,
     image: Image,
+    collidable: bool,
 }
 
 
@@ -19,6 +20,7 @@ impl Weapon {
             sprite: new_sprite,
             range: new_range,
             image: new_image,
+            collidable: true,
         }
     }
 
@@ -29,6 +31,7 @@ impl Weapon {
     pub fn range(&mut self) -> f32 {
         self.range
     }
+
 }
 
 impl GameObject for Weapon {
@@ -53,8 +56,15 @@ impl GameObject for Weapon {
         self.sprite.pos
     }
 
+    fn is_collidable(&self) -> bool {
+        self.collidable
+    }
+
     fn collides_with<T: GameObject>(&self, other_object: &T) -> bool {
-        self.sprite.overlaps_rectangle(&other_object.sprite())
+        if other_object.is_collidable(){
+            return self.sprite.overlaps_rectangle(&other_object.sprite());
+        }
+        false
     }
 
 }
