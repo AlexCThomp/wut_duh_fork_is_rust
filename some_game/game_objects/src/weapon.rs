@@ -1,4 +1,4 @@
-use quicksilver::{geom::{Vector, Rectangle, Shape}, graphics::{Color, Image}};
+use quicksilver::{geom::{Vector, Rectangle, Shape}, graphics::{Image}};
 
 use crate::GameObject;
 

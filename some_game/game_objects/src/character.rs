@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use quicksilver::geom::{Vector, Rectangle, Shape};
-use quicksilver::graphics::{Color, Image};
+use quicksilver::graphics::{Image};
 
 use crate::GameObject;
 use crate::weapon::Weapon;
