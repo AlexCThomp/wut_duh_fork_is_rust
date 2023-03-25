@@ -1,7 +1,10 @@
-use game_objects::{character::{
+use game_objects::GameObject;
+use game_objects::character::{
     Character,
     WeaponState
-}, GameObject};
+};
+use game_objects::game_map::GameMap;
+
 
 use quicksilver::{
     geom::{Vector},
@@ -25,6 +28,9 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     let enemy_image = Image::load(&gfx, r"green_circle.png").await?;
     let weapon_image = Image::load(&gfx, r"green_circle.png").await?;
     let death_image = Image::load(&gfx, r"red_x.png").await?;
+    let wall_image = Image::load(&gfx, r"wall.png").await?;
+
+    let game_map = GameMap::new(wall_image);
     
     let mut player = Character::new(
         Vector::new(300.0, 300.0), 
@@ -38,6 +44,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         Vector::new(40.0, 40.0), 
         enemy_image.clone(),
     );
+    enemy.set_speed(1.0);
     
     loop {
         while let Some(_) = input.next_event().await {}
@@ -48,16 +55,16 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         player.un_attack();
 
         if input.key_down(Key::A) {
-            player.move_left();
+            player.move_left(game_map.map());
         }
         if input.key_down(Key::D) {
-            player.move_right();
+            player.move_right(game_map.map());
         }
         if input.key_down(Key::W) {
-            player.move_up();
+            player.move_up(game_map.map());
         }
         if input.key_down(Key::S) {
-            player.move_down();
+            player.move_down(game_map.map());
         }
         if input.key_down(Key::Space) {
             player.attack();
@@ -71,9 +78,14 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             enemy.set_image(death_image.clone());
         }
         
-        enemy.move_towards(player.position());
+        // enemy.move_towards(player.position(), game_map.map());
 
-        gfx.clear(Color::WHITE);    
+        gfx.clear(Color::WHITE);
+        // Draw Map
+        for wall in game_map.map() {
+            gfx.draw_image(wall.image(), wall.sprite())
+        }
+
         // Draw player
         gfx.draw_image(&player.image(), player.sprite());
 

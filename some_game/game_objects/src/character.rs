@@ -3,6 +3,7 @@ use quicksilver::geom::{Vector, Rectangle, Shape};
 use quicksilver::graphics::{Image};
 
 use crate::GameObject;
+use crate::wall::Wall;
 use crate::weapon::Weapon;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
@@ -90,9 +91,18 @@ impl Character{
         
     }
 
-    pub fn move_up(&mut self) {
-        self.sprite.pos.y -= self.speed;
+    pub fn move_up(&mut self, game_map: &Vec<Wall>) {
+
         self.direction = Direction::Up;
+        self.sprite.pos.y -= self.speed;
+
+        for wall in game_map{
+            let collision_detected = self.collides_with(wall);
+            if collision_detected {
+                self.sprite.pos.y += self.speed;
+                break
+            }
+        }
 
         if self.weapon.is_none() || self.weapon_state.is_none() {
             return;
@@ -103,9 +113,17 @@ impl Character{
         weapon.set_position(new_weapon_position);
     }
 
-    pub fn move_down(&mut self) {
+    pub fn move_down(&mut self, game_map: &Vec<Wall>) {
         self.sprite.pos.y += self.speed;
         self.direction = Direction::Down;
+        
+        for wall in game_map{
+            let collision_detected = self.collides_with(wall);
+            if collision_detected {
+                self.sprite.pos.y -= self.speed;
+                break
+            }
+        }
 
         if self.weapon.is_none() || self.weapon_state.is_none() {
             return;
@@ -116,9 +134,17 @@ impl Character{
         weapon.set_position(new_weapon_position);
     }
 
-    pub fn move_left(&mut self) {
+    pub fn move_left(&mut self, game_map: &Vec<Wall>) {
         self.sprite.pos.x -= self.speed;
         self.direction = Direction::Left;
+        
+        for wall in game_map{
+            let collision_detected = self.collides_with(wall);
+            if collision_detected {
+                self.sprite.pos.x += self.speed;
+                break
+            }
+        }
 
         if self.weapon.is_none() || self.weapon_state.is_none() {
             return;
@@ -129,9 +155,17 @@ impl Character{
         weapon.set_position(new_weapon_position);
     }
 
-    pub fn move_right(&mut self) {
+    pub fn move_right(&mut self, game_map: &Vec<Wall>) {
         self.sprite.pos.x += self.speed;
         self.direction = Direction::Right;
+        
+        for wall in game_map{
+            let collision_detected = self.collides_with(wall);
+            if collision_detected {
+                self.sprite.pos.x -= self.speed;
+                break
+            }
+        }
 
         if self.weapon.is_none() || self.weapon_state.is_none() {
             return;
@@ -193,21 +227,25 @@ impl Character{
         weapon_positions[&direction][&state]
     }
 
-    pub fn move_towards(&mut self, target_location: Vector) {
+    pub fn move_towards(&mut self, target_location: Vector, game_map: &Vec<Wall>) {
     
         if target_location.x < self.sprite.pos.x {
-            self.move_left();
+            self.move_left(game_map);
         }
         if target_location.x > self.sprite.pos.x {
-            self.move_right();
+            self.move_right(game_map);
         }
         if target_location.y < self.sprite.pos.y {
-            self.move_up();
+            self.move_up(game_map);
         }
         if target_location.y > self.sprite.pos.y {
-            self.move_down();
+            self.move_down(game_map);
         }
         
+    }
+
+    pub fn set_speed(&mut self, new_speed: f32) {
+        self.speed = new_speed;
     }
 
 }

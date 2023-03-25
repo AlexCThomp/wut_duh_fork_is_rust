@@ -2,6 +2,15 @@ use quicksilver::{graphics::{Image}, geom::{Rectangle, Vector}};
 
 pub mod character;
 pub mod weapon;
+pub mod wall;
+pub mod game_map;
+
+pub enum GameObjectType {
+    Enemy,
+    Player,
+    Weapon,
+    Wall,
+}
 
 pub trait GameObject {
     fn image(&self) -> &Image;
