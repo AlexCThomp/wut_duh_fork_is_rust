@@ -3,13 +3,7 @@ use quicksilver::geom::{Vector, Rectangle, Shape};
 use quicksilver::graphics::{Image};
 
 use crate::{GameObject, GameObjectType};
-use crate::weapon::Weapon;
-
-#[derive(Copy, Clone, PartialEq, Eq, Hash)]
-pub enum WeaponState {
-    Default,
-    Attack
-}
+use crate::weapon::{Weapon, WeaponState};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Direction {
@@ -23,7 +17,6 @@ pub struct Character {
     weapon: Option<Weapon>,
     sprite: Rectangle,
     direction: Direction,
-    weapon_state: Option<WeaponState>,
     speed: f32,
     image: Image,
     collidable: bool,
@@ -44,7 +37,6 @@ impl Character{
             sprite: new_sprite,
             direction: Direction::Right,
             weapon: Some(new_weapon),
-            weapon_state: Some(WeaponState::Default),
             speed: 2.0,
             image: new_image,
             collidable: true,
@@ -59,7 +51,6 @@ impl Character{
             sprite: new_sprite,
             direction: Direction::Right,
             weapon: None,
-            weapon_state: None,
             speed: 2.0,
             image: new_image,
             collidable: is_collidable,
@@ -83,25 +74,29 @@ impl Character{
     }
 
     pub fn weapon_state(&self) -> WeaponState {
-        self.weapon_state.expect("No weapon_state to get")
+        self.weapon.as_ref().expect("no weapon to get state from").state()
+    }
+
+    pub fn set_weapon_state(&mut self, new_state: WeaponState) {
+        self.weapon.as_mut().expect("no weapon to set state for").set_state(new_state);
     }
 
     pub fn attack(&mut self) {
-        if self.weapon.is_none() || self.weapon_state.is_none() {
+        if self.weapon.is_none() {
             return;
         }
         let new_weapon_state = WeaponState::Attack;
-        self.weapon_state = Some(new_weapon_state);
+        self.set_weapon_state(new_weapon_state);
         let new_weapon_position = self.recalculate_weapon_position(self.direction, new_weapon_state);
         self.weapon.as_mut().expect("no weapon to attack with").set_position(new_weapon_position);
     }
 
     pub fn un_attack(&mut self) {
-        if self.weapon.is_none() || self.weapon_state.is_none() {
+        if self.weapon.is_none() {
             return;
         }
         let new_weapon_state = WeaponState::Default;
-        self.weapon_state = Some(new_weapon_state);
+        self.set_weapon_state(new_weapon_state);
         let new_weapon_position = self.recalculate_weapon_position(self.direction, new_weapon_state);
         self.weapon.as_mut().expect("no weapon to un_attack with").set_position(new_weapon_position);
         
@@ -120,13 +115,12 @@ impl Character{
             }
         }
 
-        if self.weapon.is_none() || self.weapon_state.is_none() {
+        if self.weapon.is_none() {
             return;
         }
-        let weapon_state = self.weapon_state.expect("This is dumb weapon state should be in the weapon");
+        let weapon_state = self.weapon_state();
         let new_weapon_position = self.recalculate_weapon_position(self.direction, weapon_state);
-        let weapon = self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist");
-        weapon.set_position(new_weapon_position);
+        self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist").set_position(new_weapon_position);
     }
 
     pub fn move_down(&mut self, game_map: &Vec<Character>) {
@@ -141,13 +135,12 @@ impl Character{
             }
         }
 
-        if self.weapon.is_none() || self.weapon_state.is_none() {
+        if self.weapon.is_none() {
             return;
         }
-        let weapon_state = self.weapon_state.expect("This is dumb weapon state should be in the weapon");
+        let weapon_state = self.weapon_state();
         let new_weapon_position = self.recalculate_weapon_position(self.direction, weapon_state);
-        let weapon = self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist");
-        weapon.set_position(new_weapon_position);
+        self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist").set_position(new_weapon_position);
     }
 
     pub fn move_left(&mut self, game_map: &Vec<Character>) {
@@ -162,13 +155,12 @@ impl Character{
             }
         }
 
-        if self.weapon.is_none() || self.weapon_state.is_none() {
+        if self.weapon.is_none() {
             return;
         }
-        let weapon_state = self.weapon_state.expect("This is dumb weapon state should be in the weapon");
+        let weapon_state = self.weapon_state();
         let new_weapon_position = self.recalculate_weapon_position(self.direction, weapon_state);
-        let weapon = self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist");
-        weapon.set_position(new_weapon_position);
+        self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist").set_position(new_weapon_position);
     }
 
     pub fn move_right(&mut self, game_map: &Vec<Character>) {
@@ -183,13 +175,12 @@ impl Character{
             }
         }
 
-        if self.weapon.is_none() || self.weapon_state.is_none() {
+        if self.weapon.is_none() {
             return;
         }
-        let weapon_state = self.weapon_state.expect("This is dumb weapon state should be in the weapon");
+        let weapon_state = self.weapon_state();
         let new_weapon_position = self.recalculate_weapon_position(self.direction, weapon_state);
-        let weapon = self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist");
-        weapon.set_position(new_weapon_position);
+        self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist").set_position(new_weapon_position);
     }
 
     pub fn recalculate_weapon_position(&mut self, direction: Direction, state: WeaponState) -> Vector {

@@ -2,15 +2,20 @@ use quicksilver::{geom::{Vector, Rectangle, Shape}, graphics::{Image}};
 
 use crate::GameObject;
 
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+pub enum WeaponState {
+    Default,
+    Attack
+}
+
 #[derive(Clone)]
 pub struct Weapon{
     range: f32,
     sprite: Rectangle,
     image: Image,
     collidable: bool,
+    state: WeaponState,
 }
-
-
 
 impl Weapon {
 
@@ -21,6 +26,7 @@ impl Weapon {
             range: new_range,
             image: new_image,
             collidable: true,
+            state: WeaponState::Default,
         }
     }
 
@@ -30,6 +36,14 @@ impl Weapon {
 
     pub fn range(&mut self) -> f32 {
         self.range
+    }
+
+    pub fn state(&self) -> WeaponState {
+        self.state
+    }
+
+    pub fn set_state(&mut self, new_state: WeaponState) {
+        self.state = new_state;
     }
 
 }

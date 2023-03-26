@@ -1,11 +1,11 @@
 use game_objects::GameObject;
 use game_objects::character::{
-    Character,
-    WeaponState
+    Character
 };
 use game_objects::game_map::GameMap;
 
 
+use game_objects::weapon::WeaponState;
 use quicksilver::{
     geom::{Vector},
     graphics::{Color, Image},
