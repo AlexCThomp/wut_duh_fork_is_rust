@@ -50,21 +50,17 @@ impl GameMap {
 
                 if *obj_type == GameObjectType::Floor {
 
-                    new_map.push(GameObject::new_of_type(
+                    new_map.push(GameObject::new_floor(
                         position,
-                        floor_image.clone(),
-                        None,
-                        *obj_type
+                        floor_image.clone()
                     ));
 
                 }
                 else if *obj_type == GameObjectType::Wall {
 
-                    new_map.push(GameObject::new_of_type(
+                    new_map.push(GameObject::new_wall(
                         position,
-                        wall_image.clone(),
-                        None,
-                        *obj_type
+                        wall_image.clone()
                     ));
                     
                 }

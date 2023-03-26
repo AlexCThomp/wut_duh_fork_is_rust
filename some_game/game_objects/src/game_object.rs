@@ -30,15 +30,44 @@ pub struct GameObject {
 }
 
 impl GameObject{
-    pub fn new(position: Vector, new_image: Image, weapon_image: Image) -> GameObject {
+
+    pub fn new(position: Vector, new_image: Image, size: Vector, new_range: f32, new_weapon_state: WeaponState, is_collidable: bool) -> GameObject {
+        let new_sprite = Rectangle::new(position, size);
+        
+        GameObject {
+            sprite: new_sprite,
+            direction: Direction::Right,
+            weapon: None,
+            speed: 2.0,
+            image: new_image,
+            collidable: is_collidable,
+            range: new_range,
+            state: new_weapon_state,
+        }
+    }
+
+    pub fn new_weapon(position: Vector, new_image: Image, range: f32) -> GameObject {
+        let size = Vector::new(24.0, 24.0);
+        GameObject::new(position, new_image, size, range, WeaponState::Default, false)
+    }
+
+    pub fn new_floor(position: Vector, new_image: Image) -> GameObject {
+        let size = Vector::new(32.0, 32.0);
+        GameObject::new(position, new_image, size, 0.0, WeaponState::Default, false)
+    }
+
+    pub fn new_wall(position: Vector, new_image: Image) -> GameObject {
+        let size = Vector::new(32.0, 32.0);
+        GameObject::new(position, new_image, size, 0.0, WeaponState::Default, true)
+    }
+
+    pub fn new_with_weapon(position: Vector, new_image: Image, weapon_image: Image) -> GameObject {
         let size = Vector::new(32.0, 32.0);
         let new_sprite = Rectangle::new(position, size);
-        let new_weapon = GameObject::new_no_weapon(
+        let new_weapon = GameObject::new_weapon(
             Vector::new(new_sprite.pos.x + new_sprite.size().x, new_sprite.pos.y - 12.0), 
             weapon_image,
-            Vector::new(24.0, 24.0),
-            24.0,
-            true,
+            24.0
         );
 
         GameObject {
@@ -50,33 +79,6 @@ impl GameObject{
             collidable: true,
             state: WeaponState::Default,
             range: 0.0,
-        }
-    }
-
-    pub fn new_no_weapon(position: Vector, new_image: Image, size: Vector, new_range: f32, is_collidable: bool) -> GameObject {
-        let new_sprite = Rectangle::new(position, size);
-        
-        GameObject {
-            sprite: new_sprite,
-            direction: Direction::Right,
-            weapon: None,
-            speed: 2.0,
-            image: new_image,
-            collidable: is_collidable,
-            range: new_range,
-            state: WeaponState::Default,
-        }
-    }
-
-    pub fn new_of_type(position: Vector, new_image: Image, weapon_image: Option<Image>, game_obj_type: GameObjectType) -> GameObject {
-        if game_obj_type == GameObjectType::Player {
-            return GameObject::new(position, new_image, weapon_image.expect("need a weapon image"));
-        }
-        else if game_obj_type == GameObjectType::Floor {
-            return GameObject::new_no_weapon(position, new_image, Vector::new(32.0, 32.0), 0.0, false);
-        }
-        else {
-            return GameObject::new_no_weapon(position, new_image, Vector::new(32.0, 32.0), 0.0, true);
         }
     }
 

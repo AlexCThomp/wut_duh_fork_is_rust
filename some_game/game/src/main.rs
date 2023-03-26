@@ -31,17 +31,18 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
 
     let game_map = GameMap::new(wall_image, floor_image);
     
-    let mut player = GameObject::new(
+    let mut player = GameObject::new_with_weapon(
         Vector::new(32.0, 32.0),  
         player_image.clone(),
         weapon_image,
     );
 
-    let mut enemy = GameObject::new_no_weapon(
+    let mut enemy = GameObject::new(
         Vector::new(600.0, 300.0), 
         enemy_image.clone(),
         Vector::new(32.0, 32.0),
         0.0,
+        WeaponState::Attack,
         true,
     );
     
