@@ -1,11 +1,9 @@
-use game_objects::GameObject;
-use game_objects::character::{
-    Character
-};
 use game_objects::game_map::GameMap;
+use game_objects::game_object::{
+    GameObject, 
+    WeaponState,
+};
 
-
-use game_objects::weapon::WeaponState;
 use quicksilver::{
     geom::{Vector},
     graphics::{Color, Image},
@@ -33,15 +31,17 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
 
     let game_map = GameMap::new(wall_image, floor_image);
     
-    let mut player = Character::new(
+    let mut player = GameObject::new(
         Vector::new(32.0, 32.0),  
         player_image.clone(),
         weapon_image,
     );
 
-    let mut enemy = Character::new_no_weapon(
+    let mut enemy = GameObject::new_no_weapon(
         Vector::new(600.0, 300.0), 
         enemy_image.clone(),
+        Vector::new(32.0, 32.0),
+        0.0,
         true,
     );
     

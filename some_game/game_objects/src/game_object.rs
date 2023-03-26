@@ -2,8 +2,7 @@ use std::collections::HashMap;
 use quicksilver::geom::{Vector, Rectangle, Shape};
 use quicksilver::graphics::{Image};
 
-use crate::{GameObject, GameObjectType};
-use crate::weapon::{Weapon, WeaponState};
+use crate::{GameObjectType};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Direction {
@@ -13,64 +12,80 @@ pub enum Direction {
     Down
 }
 
-pub struct Character {
-    weapon: Option<Weapon>,
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+pub enum WeaponState {
+    Default,
+    Attack
+}
+
+pub struct GameObject {
+    weapon: Option<Box<GameObject>>,
     sprite: Rectangle,
     direction: Direction,
     speed: f32,
     image: Image,
     collidable: bool,
+    state: WeaponState,
+    range: f32,
 }
 
-impl Character{
-    pub fn new(position: Vector, new_image: Image, weapon_image: Image) -> Character {
+impl GameObject{
+    pub fn new(position: Vector, new_image: Image, weapon_image: Image) -> GameObject {
         let size = Vector::new(32.0, 32.0);
         let new_sprite = Rectangle::new(position, size);
-        let new_weapon = Weapon::new(
-            Rectangle::new(Vector::new(new_sprite.pos.x + new_sprite.size().x, new_sprite.pos.y - 12.0), 
-            Vector::new(24.0, 24.0)),
-            24.0,
+        let new_weapon = GameObject::new_no_weapon(
+            Vector::new(new_sprite.pos.x + new_sprite.size().x, new_sprite.pos.y - 12.0), 
             weapon_image,
+            Vector::new(24.0, 24.0),
+            24.0,
+            true,
         );
 
-        Character {
+        GameObject {
             sprite: new_sprite,
             direction: Direction::Right,
-            weapon: Some(new_weapon),
+            weapon: Some(Box::new(new_weapon)),
             speed: 2.0,
             image: new_image,
             collidable: true,
+            state: WeaponState::Default,
+            range: 0.0,
         }
     }
 
-    pub fn new_no_weapon(position: Vector, new_image: Image, is_collidable: bool) -> Character {
-        let size = Vector::new(32.0, 32.0);
+    pub fn new_no_weapon(position: Vector, new_image: Image, size: Vector, new_range: f32, is_collidable: bool) -> GameObject {
         let new_sprite = Rectangle::new(position, size);
         
-        Character {
+        GameObject {
             sprite: new_sprite,
             direction: Direction::Right,
             weapon: None,
             speed: 2.0,
             image: new_image,
             collidable: is_collidable,
+            range: new_range,
+            state: WeaponState::Default,
         }
     }
 
-    pub fn new_of_type(position: Vector, new_image: Image, weapon_image: Option<Image>, game_obj_type: GameObjectType) -> Character {
+    pub fn new_of_type(position: Vector, new_image: Image, weapon_image: Option<Image>, game_obj_type: GameObjectType) -> GameObject {
         if game_obj_type == GameObjectType::Player {
-            return Character::new(position, new_image, weapon_image.expect("need a weapon image"));
+            return GameObject::new(position, new_image, weapon_image.expect("need a weapon image"));
         }
         else if game_obj_type == GameObjectType::Floor {
-            return Character::new_no_weapon(position, new_image, false);
+            return GameObject::new_no_weapon(position, new_image, Vector::new(32.0, 32.0), 0.0, false);
         }
         else {
-            return Character::new_no_weapon(position, new_image, true);
+            return GameObject::new_no_weapon(position, new_image, Vector::new(32.0, 32.0), 0.0, true);
         }
     }
 
-    pub fn weapon(&self) -> &Weapon {
+    pub fn weapon(&self) -> &GameObject {
         &self.weapon.as_ref().expect("No weapon to get")
+    }
+
+    pub fn set_weapon(&mut self, new_weapon: GameObject) {
+        self.weapon = Some(Box::new(new_weapon));
     }
 
     pub fn weapon_state(&self) -> WeaponState {
@@ -102,7 +117,7 @@ impl Character{
         
     }
 
-    pub fn move_up(&mut self, game_map: &Vec<Character>) {
+    pub fn move_up(&mut self, game_map: &Vec<GameObject>) {
 
         self.direction = Direction::Up;
         self.sprite.pos.y -= self.speed;
@@ -123,7 +138,7 @@ impl Character{
         self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist").set_position(new_weapon_position);
     }
 
-    pub fn move_down(&mut self, game_map: &Vec<Character>) {
+    pub fn move_down(&mut self, game_map: &Vec<GameObject>) {
         self.sprite.pos.y += self.speed;
         self.direction = Direction::Down;
         
@@ -143,7 +158,7 @@ impl Character{
         self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist").set_position(new_weapon_position);
     }
 
-    pub fn move_left(&mut self, game_map: &Vec<Character>) {
+    pub fn move_left(&mut self, game_map: &Vec<GameObject>) {
         self.sprite.pos.x -= self.speed;
         self.direction = Direction::Left;
         
@@ -163,7 +178,7 @@ impl Character{
         self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist").set_position(new_weapon_position);
     }
 
-    pub fn move_right(&mut self, game_map: &Vec<Character>) {
+    pub fn move_right(&mut self, game_map: &Vec<GameObject>) {
         self.sprite.pos.x += self.speed;
         self.direction = Direction::Right;
         
@@ -185,7 +200,7 @@ impl Character{
 
     pub fn recalculate_weapon_position(&mut self, direction: Direction, state: WeaponState) -> Vector {
   
-        let mut weapon = self.weapon.clone().expect("Can't Calculate the location of a weapon that doesn't exist");
+        let weapon = self.weapon.as_ref().expect("Can't Calculate the location of a weapon that doesn't exist");
         let weapon_positions = HashMap::from([
             (Direction::Up, HashMap::from([
                 (WeaponState::Default, Vector::new(
@@ -199,12 +214,12 @@ impl Character{
             ])),
             (Direction::Right, HashMap::from([
                 (WeaponState::Default, Vector::new(
-                    self.sprite.pos.x + self.sprite.size().x, 
+                    self.sprite.pos.x + self.size().x, 
                     self.sprite.pos.y + (self.size().y / 2.0 - weapon.size().y / 2.0))
                 ),
                 (WeaponState::Attack, Vector::new(
-                    self.sprite.pos.x + self.sprite.size().x + weapon.range(), 
-                    self.sprite.pos.y + (self.sprite.size.y / 2.0 - weapon.sprite().size.y / 2.0))
+                    self.sprite.pos.x + self.size().x + weapon.range(), 
+                    self.sprite.pos.y + (self.size().y / 2.0 - weapon.sprite().size.y / 2.0))
                 )
             ])),
             (Direction::Down, HashMap::from([
@@ -234,7 +249,7 @@ impl Character{
         weapon_positions[&direction][&state]
     }
 
-    pub fn move_towards(&mut self, target_location: Vector, game_map: &Vec<Character>) {
+    pub fn move_towards(&mut self, target_location: Vector, game_map: &Vec<GameObject>) {
     
         if target_location.x < self.sprite.pos.x {
             self.move_left(game_map);
@@ -255,39 +270,51 @@ impl Character{
         self.speed = new_speed;
     }
 
-}
-
-impl GameObject for Character {
-    
-    fn image(&self) -> &Image {
+    pub fn image(&self) -> &Image {
         &self.image
     }
 
-    fn set_image(&mut self, new_image: Image) {
+    pub fn set_image(&mut self, new_image: Image) {
         self.image = new_image;
     }
 
-    fn sprite(&self) -> Rectangle {
+    pub fn sprite(&self) -> Rectangle {
         self.sprite
     }
 
-    fn size(&self) -> Vector {
+    pub fn size(&self) -> Vector {
         self.sprite.size
     }
 
-    fn position(&self) -> Vector {
+    pub fn position(&self) -> Vector {
         self.sprite.pos
     }
 
-    fn is_collidable(&self) -> bool {
+    pub fn is_collidable(&self) -> bool {
         self.collidable
     }
 
-    fn collides_with<T: GameObject>(&self, other_object: &T) -> bool {
+    pub fn collides_with(&self, other_object: &GameObject) -> bool {
         if other_object.is_collidable(){
             return self.sprite.overlaps_rectangle(&other_object.sprite());
         }
         false
+    }
+
+    pub fn set_position(&mut self, new_position: Vector) {
+        self.sprite.pos = new_position;
+    }
+
+    pub fn range(&self) -> f32 {
+        self.range
+    }
+
+    pub fn state(&self) -> WeaponState {
+        self.state
+    }
+
+    pub fn set_state(&mut self, new_state: WeaponState) {
+        self.state = new_state;
     }
 
 }

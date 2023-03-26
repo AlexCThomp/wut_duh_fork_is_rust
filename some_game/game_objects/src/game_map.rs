@@ -2,7 +2,7 @@ use quicksilver::graphics::Image;
 use quicksilver::geom::Vector;
 
 use crate::GameObjectType;
-use crate::character::Character;
+use crate::game_object::GameObject;
 
 const MAP_1: [[GameObjectType;32];23] = [
     [GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall, GameObjectType::Wall],
@@ -32,13 +32,13 @@ const MAP_1: [[GameObjectType;32];23] = [
 ];
 
 pub struct GameMap {
-    map: Vec<Character>
+    map: Vec<GameObject>
 }
 
 impl GameMap {
 
     pub fn new(wall_image: Image, floor_image: Image) -> GameMap {
-        let mut new_map:Vec<Character> = Vec::new();
+        let mut new_map:Vec<GameObject> = Vec::new();
         for (y, el) in MAP_1.iter().enumerate() {
             for (x, obj_type) in el.iter().enumerate(){
                 let mut x_coord = x as f32;
@@ -49,7 +49,7 @@ impl GameMap {
 
                 if *obj_type == GameObjectType::Floor {
 
-                    new_map.push(Character::new_of_type(
+                    new_map.push(GameObject::new_of_type(
                         position,
                         floor_image.clone(),
                         None,
@@ -59,7 +59,7 @@ impl GameMap {
                 }
                 else if *obj_type == GameObjectType::Wall {
 
-                    new_map.push(Character::new_of_type(
+                    new_map.push(GameObject::new_of_type(
                         position,
                         wall_image.clone(),
                         None,
@@ -76,7 +76,7 @@ impl GameMap {
         }
     }
 
-    pub fn map(&self) -> &Vec<Character> {
+    pub fn map(&self) -> &Vec<GameObject> {
         &self.map
     }
 }
