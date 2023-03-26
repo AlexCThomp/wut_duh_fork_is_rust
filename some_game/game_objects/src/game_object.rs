@@ -2,8 +2,6 @@ use std::collections::HashMap;
 use quicksilver::geom::{Vector, Rectangle, Shape};
 use quicksilver::graphics::{Image};
 
-use crate::{GameObjectType};
-
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Direction {
     Up,
