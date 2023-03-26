@@ -49,7 +49,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         while let Some(_) = input.next_event().await {}
         
         player.set_image(player_image.clone());
-        enemy.set_image(enemy_image.clone());
+        // enemy.set_image(enemy_image.clone());
 
         player.un_attack();
 
