@@ -34,9 +34,9 @@ impl Character{
         let size = Vector::new(32.0, 32.0);
         let new_sprite = Rectangle::new(position, size);
         let new_weapon = Weapon::new(
-            Rectangle::new(Vector::new(new_sprite.pos.x + new_sprite.size().x, new_sprite.pos.y - 16.0), 
-            size),
-            32.0,
+            Rectangle::new(Vector::new(new_sprite.pos.x + new_sprite.size().x, new_sprite.pos.y - 12.0), 
+            Vector::new(24.0, 24.0)),
+            24.0,
             weapon_image,
         );
 
