@@ -48,23 +48,23 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     
     loop {
         while let Some(_) = input.next_event().await {}
-        
-        player.set_image(player_image.clone());
+
+        // player.set_image(player_image.clone());
         // enemy.set_image(enemy_image.clone());
 
         player.un_attack();
 
         if input.key_down(Key::A) {
-            player.move_left(game_map.map());
+            player.move_left();
         }
         if input.key_down(Key::D) {
-            player.move_right(game_map.map());
+            player.move_right();
         }
         if input.key_down(Key::W) {
-            player.move_up(game_map.map());
+            player.move_up();
         }
         if input.key_down(Key::S) {
-            player.move_down(game_map.map());
+            player.move_down();
         }
         if input.key_down(Key::Space) {
             player.attack();
@@ -78,8 +78,10 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             enemy.set_image(death_image.clone());
         }
         
-        player.fall(game_map.map());
-        enemy.fall(game_map.map());
+        player.carry_momentum(game_map.map());
+        
+        // player.fall(game_map.map());
+        // enemy.fall(game_map.map());
 
         gfx.clear(Color::WHITE);
         // Draw Map

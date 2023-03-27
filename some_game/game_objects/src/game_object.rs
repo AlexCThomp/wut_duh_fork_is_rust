@@ -21,7 +21,9 @@ pub struct GameObject {
     sprite: Rectangle,
     direction: Direction,
     weight: f32,
-    speed: f32,
+    velocity: Vector,
+    acceleration: f32,
+    max_speed: f32,
     image: Image,
     collidable: bool,
     state: WeaponState,
@@ -38,7 +40,9 @@ impl GameObject{
             direction: Direction::Right,
             weapon: None,
             weight: 4.0,
-            speed: 2.0,
+            velocity: Vector::new(0.0,0.0),
+            acceleration: 2.0,
+            max_speed: 4.0,
             image: new_image,
             collidable: is_collidable,
             range: new_range,
@@ -75,7 +79,9 @@ impl GameObject{
             direction: Direction::Right,
             weapon: Some(Box::new(new_weapon)),
             weight: 4.0,
-            speed: 2.0,
+            velocity: Vector::new(0.0,0.0),
+            acceleration: 2.0,
+            max_speed: 4.0,
             image: new_image,
             collidable: true,
             state: WeaponState::Default,
@@ -120,60 +126,41 @@ impl GameObject{
         
     }
 
-    pub fn move_up(&mut self, game_map: &Vec<GameObject>) {
+    pub fn move_up(&mut self) {
 
-        self.sprite.pos.y -= self.speed;
         self.set_direction(Direction::Up);
-
-        for map_element in game_map{
-            let collision_detected = self.collides_with(map_element);
-            if collision_detected {
-                self.sprite.pos.y += self.speed;
-                break
-            }
+        let new_velocity = self.velocity.y - self.acceleration;
+        if new_velocity.abs() <= self.max_speed {
+            self.velocity.y = new_velocity;
         }
     }
 
-    pub fn move_down(&mut self, game_map: &Vec<GameObject>) {
+    pub fn move_down(&mut self) {
 
-        self.sprite.pos.y += self.speed;
         self.set_direction(Direction::Down);
-        
-        for map_element in game_map{
-            let collision_detected = self.collides_with(map_element);
-            if collision_detected {
-                self.sprite.pos.y -= self.speed;
-                break
-            }
+        let new_velocity = self.velocity.y + self.acceleration;
+        if new_velocity.abs() <= self.max_speed {
+            self.velocity.y = new_velocity;
         }
     }
 
-    pub fn move_left(&mut self, game_map: &Vec<GameObject>) {
+    pub fn move_left(&mut self) {
 
-        self.sprite.pos.x -= self.speed;
         self.set_direction(Direction::Left);
-        
-        for character in game_map{
-            let collision_detected = self.collides_with(character);
-            if collision_detected {
-                self.sprite.pos.x += self.speed;
-                break
-            }
+        let new_velocity = self.velocity.x - self.acceleration;
+        if new_velocity.abs() <= self.max_speed {
+            self.velocity.x = new_velocity;
         }
     }
 
-    pub fn move_right(&mut self, game_map: &Vec<GameObject>) {
+    pub fn move_right(&mut self) {
 
-        self.sprite.pos.x += self.speed;
         self.set_direction(Direction::Right);
-        
-        for map_element in game_map{
-            let collision_detected = self.collides_with(map_element);
-            if collision_detected {
-                self.sprite.pos.x -= self.speed;
-                break
-            }
+        let new_velocity = self.velocity.x + self.acceleration;
+        if new_velocity.abs() <= self.max_speed {
+            self.velocity.x = new_velocity;
         }
+        
     }
 
     pub fn recalculate_weapon_position(&mut self, direction: Direction, state: WeaponState) -> Vector {
@@ -227,21 +214,46 @@ impl GameObject{
         weapon_positions[&direction][&state]
     }
 
-    pub fn move_towards(&mut self, target_location: Vector, game_map: &Vec<GameObject>) {
+    pub fn move_towards(&mut self, target_location: Vector) {
     
         if target_location.x < self.sprite.pos.x {
-            self.move_left(game_map);
+            self.move_left();
         }
         if target_location.x > self.sprite.pos.x {
-            self.move_right(game_map);
+            self.move_right();
         }
         if target_location.y < self.sprite.pos.y {
-            self.move_up(game_map);
+            self.move_up();
         }
         if target_location.y > self.sprite.pos.y {
-            self.move_down(game_map);
+            self.move_down();
         }
         
+    }
+
+    pub fn carry_momentum(&mut self, game_map: &Vec<GameObject>) {
+
+        self.sprite.pos.x += self.velocity.x;
+        if self.check_collisions(game_map){
+            self.sprite.pos.x -= self.velocity.x;
+        }
+
+        self.sprite.pos.y += self.velocity.y;
+        if self.check_collisions(game_map){
+            self.sprite.pos.y -= self.velocity.y;
+        }
+    }
+
+    fn check_collisions(&self, game_map: &Vec<GameObject>) -> bool{
+
+        let mut collision_detected: bool = false;
+        for map_element in game_map{
+            collision_detected = self.collides_with(map_element);
+            if collision_detected {
+                break
+            }
+        }
+        collision_detected
     }
 
     pub fn fall(&mut self, game_map: &Vec<GameObject>) {
@@ -254,7 +266,7 @@ impl GameObject{
                 break
             }
         }
-}
+    }
 
     pub fn set_direction(&mut self, new_direction: Direction) {
 
@@ -269,7 +281,7 @@ impl GameObject{
     }
 
     pub fn set_speed(&mut self, new_speed: f32) {
-        self.speed = new_speed;
+        self.acceleration = new_speed;
     }
 
     pub fn image(&self) -> &Image {
