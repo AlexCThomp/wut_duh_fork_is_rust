@@ -20,6 +20,7 @@ pub struct GameObject {
     weapon: Option<Box<GameObject>>,
     sprite: Rectangle,
     direction: Direction,
+    weight: f32,
     speed: f32,
     image: Image,
     collidable: bool,
@@ -36,6 +37,7 @@ impl GameObject{
             sprite: new_sprite,
             direction: Direction::Right,
             weapon: None,
+            weight: 4.0,
             speed: 2.0,
             image: new_image,
             collidable: is_collidable,
@@ -72,6 +74,7 @@ impl GameObject{
             sprite: new_sprite,
             direction: Direction::Right,
             weapon: Some(Box::new(new_weapon)),
+            weight: 4.0,
             speed: 2.0,
             image: new_image,
             collidable: true,
@@ -119,8 +122,8 @@ impl GameObject{
 
     pub fn move_up(&mut self, game_map: &Vec<GameObject>) {
 
-        self.direction = Direction::Up;
         self.sprite.pos.y -= self.speed;
+        self.set_direction(Direction::Up);
 
         for map_element in game_map{
             let collision_detected = self.collides_with(map_element);
@@ -129,18 +132,12 @@ impl GameObject{
                 break
             }
         }
-
-        if self.weapon.is_none() {
-            return;
-        }
-        let weapon_state = self.weapon_state();
-        let new_weapon_position = self.recalculate_weapon_position(self.direction, weapon_state);
-        self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist").set_position(new_weapon_position);
     }
 
     pub fn move_down(&mut self, game_map: &Vec<GameObject>) {
+
         self.sprite.pos.y += self.speed;
-        self.direction = Direction::Down;
+        self.set_direction(Direction::Down);
         
         for map_element in game_map{
             let collision_detected = self.collides_with(map_element);
@@ -149,18 +146,12 @@ impl GameObject{
                 break
             }
         }
-
-        if self.weapon.is_none() {
-            return;
-        }
-        let weapon_state = self.weapon_state();
-        let new_weapon_position = self.recalculate_weapon_position(self.direction, weapon_state);
-        self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist").set_position(new_weapon_position);
     }
 
     pub fn move_left(&mut self, game_map: &Vec<GameObject>) {
+
         self.sprite.pos.x -= self.speed;
-        self.direction = Direction::Left;
+        self.set_direction(Direction::Left);
         
         for character in game_map{
             let collision_detected = self.collides_with(character);
@@ -169,18 +160,12 @@ impl GameObject{
                 break
             }
         }
-
-        if self.weapon.is_none() {
-            return;
-        }
-        let weapon_state = self.weapon_state();
-        let new_weapon_position = self.recalculate_weapon_position(self.direction, weapon_state);
-        self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist").set_position(new_weapon_position);
     }
 
     pub fn move_right(&mut self, game_map: &Vec<GameObject>) {
+
         self.sprite.pos.x += self.speed;
-        self.direction = Direction::Right;
+        self.set_direction(Direction::Right);
         
         for map_element in game_map{
             let collision_detected = self.collides_with(map_element);
@@ -189,13 +174,6 @@ impl GameObject{
                 break
             }
         }
-
-        if self.weapon.is_none() {
-            return;
-        }
-        let weapon_state = self.weapon_state();
-        let new_weapon_position = self.recalculate_weapon_position(self.direction, weapon_state);
-        self.weapon.as_mut().expect("Somehow you're trying to move a weapon that doesn't exist").set_position(new_weapon_position);
     }
 
     pub fn recalculate_weapon_position(&mut self, direction: Direction, state: WeaponState) -> Vector {
@@ -264,6 +242,18 @@ impl GameObject{
             self.move_down(game_map);
         }
         
+    }
+
+    pub fn set_direction(&mut self, new_direction: Direction) {
+
+        self.direction = new_direction;
+
+        if self.weapon.is_none() {
+            return;
+        }
+        let weapon_state = self.weapon_state();
+        let new_weapon_position = self.recalculate_weapon_position(self.direction, weapon_state);
+        self.weapon.as_mut().expect("set_direction() is trying to move a weapon that doesn't exist").set_position(new_weapon_position);
     }
 
     pub fn set_speed(&mut self, new_speed: f32) {
