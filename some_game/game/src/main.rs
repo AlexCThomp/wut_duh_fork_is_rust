@@ -1,7 +1,7 @@
 use game_objects::game_map::GameMap;
 use game_objects::game_object::{
     GameObject, 
-    WeaponState,
+    WeaponState, Direction,
 };
 
 use quicksilver::{
@@ -54,6 +54,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
 
         player.un_attack();
 
+        // moves
         if input.key_down(Key::A) {
             player.move_left();
         }
@@ -65,6 +66,20 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         }
         if input.key_down(Key::S) {
             player.move_down();
+        }
+
+        // direction changes
+        if input.key_down(Key::Left) {
+            player.set_direction(Direction::Left);
+        }
+        if input.key_down(Key::Right) {
+            player.set_direction(Direction::Right);
+        }
+        if input.key_down(Key::Up) {
+            player.set_direction(Direction::Up);
+        }
+        if input.key_down(Key::Down) {
+            player.set_direction(Direction::Down);
         }
         if input.key_down(Key::Space) {
             player.attack();

@@ -128,7 +128,6 @@ impl GameObject{
 
     pub fn move_up(&mut self) {
 
-        self.set_direction(Direction::Up);
         let new_velocity = self.velocity.y - self.acceleration;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.y = new_velocity;
@@ -137,7 +136,6 @@ impl GameObject{
 
     pub fn move_down(&mut self) {
 
-        self.set_direction(Direction::Down);
         let new_velocity = self.velocity.y + self.acceleration;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.y = new_velocity;
@@ -146,7 +144,6 @@ impl GameObject{
 
     pub fn move_left(&mut self) {
 
-        self.set_direction(Direction::Left);
         let new_velocity = self.velocity.x - self.acceleration;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.x = new_velocity;
@@ -155,7 +152,6 @@ impl GameObject{
 
     pub fn move_right(&mut self) {
 
-        self.set_direction(Direction::Right);
         let new_velocity = self.velocity.x + self.acceleration;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.x = new_velocity;
