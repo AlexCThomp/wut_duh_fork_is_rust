@@ -244,6 +244,18 @@ impl GameObject{
         
     }
 
+    pub fn fall(&mut self, game_map: &Vec<GameObject>) {
+        self.sprite.pos.y += self.weight;
+
+        for map_element in game_map{
+            let collision_detected = self.collides_with(map_element);
+            if collision_detected {
+                self.sprite.pos.y -= self.weight;
+                break
+            }
+        }
+}
+
     pub fn set_direction(&mut self, new_direction: Direction) {
 
         self.direction = new_direction;

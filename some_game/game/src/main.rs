@@ -78,7 +78,8 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             enemy.set_image(death_image.clone());
         }
         
-        // enemy.move_towards(player.position(), game_map.map());
+        player.fall(game_map.map());
+        enemy.fall(game_map.map());
 
         gfx.clear(Color::WHITE);
         // Draw Map
