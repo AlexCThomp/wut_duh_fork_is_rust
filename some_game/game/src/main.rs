@@ -1,7 +1,8 @@
 use game_objects::game_map::GameMap;
 use game_objects::game_object::{
     GameObject, 
-    WeaponState, Direction,
+    WeaponState, 
+    Direction,
 };
 
 use quicksilver::{
