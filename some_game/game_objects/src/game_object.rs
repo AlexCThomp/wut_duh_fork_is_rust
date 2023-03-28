@@ -184,7 +184,7 @@ impl GameObject{
     }
 
     pub fn calculate_weapon_position(&self, weapon_size: Vector) -> Vector {
-        
+        //TODO: this math draws a square... gonna need to ad some trig
         // compute center of this game object
         let center = Vector::new(
             self.position().x + (self.size().x/2.0), 
