@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use quicksilver::geom::{Vector, Rectangle, Shape};
 use quicksilver::graphics::{Image};
+use rand::Rng;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Direction {
@@ -82,6 +83,22 @@ impl GameObject{
         new_object.set_weapon(new_weapon);
 
         new_object
+    }
+
+    pub fn new_random_enemy(image: Image) -> GameObject {
+
+        let x_coord = rand::thread_rng().gen_range(200..700) as f32;
+        let y_coord = rand::thread_rng().gen_range(100..700) as f32;
+
+        GameObject::new(
+            Vector::new(x_coord, y_coord), 
+            image.clone(),
+            Vector::new(12.0, 12.0),
+            Vector::new(0.0,0.0),
+            0.0,
+            WeaponState::Attack,
+            true,
+        )
     }
 
     pub fn new_weapon(position: Vector, new_image: Image) -> GameObject {

@@ -45,17 +45,9 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     );
 
     let mut enemies: Vec<GameObject> = Vec::new();
-    enemies.push(
-        GameObject::new(
-            Vector::new(600.0, 300.0), 
-            circle_image.clone(),
-            Vector::new(12.0, 12.0),
-            Vector::new(0.0,0.0),
-            0.0,
-            WeaponState::Attack,
-            true,
-        )
-    );
+    for _ in 0..10 {
+        enemies.push(GameObject::new_random_enemy(circle_image.clone()));
+    }
 
     let mut bullets: Vec<GameObject> = Vec::new();
     
@@ -132,7 +124,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             let delete = {enemy.got_shot(&bullets)};
             !delete
         });
-        
+
         // Draw enemies
         for enemy in enemies.iter_mut() {
             for bullet in bullets.iter() {
