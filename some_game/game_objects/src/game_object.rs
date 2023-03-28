@@ -184,7 +184,7 @@ impl GameObject{
     }
 
     pub fn calculate_weapon_position(&self, weapon_size: Vector) -> Vector {
-        //TODO: this math draws a square... gonna need to ad some trig
+        
         // compute center of this game object
         let center = Vector::new(
             self.position().x + (self.size().x/2.0), 
@@ -277,29 +277,29 @@ impl GameObject{
 
     pub fn set_direction(&mut self, new_direction: Direction) {
 
-        // formula: direction.x.abs() + direction.y.abs() = 1
+        // formula: direction.x^2 + direction.y^2 = 1
 
         if new_direction == Direction::Left && self.direction.x > -1.0{
             self.direction.x -= 0.05;
-            let y_mag = 1.0 - self.direction.x.abs();
+            let y_mag = 1.0 - (self.direction.x * self.direction.x);
             if self.direction.y >= 0.0 { self.direction.y = y_mag }
             else { self.direction.y = -y_mag }
         }
         if new_direction == Direction::Right && self.direction.x < 1.0{
             self.direction.x += 0.05;
-            let y_mag = 1.0 - self.direction.x.abs();
+            let y_mag = 1.0 - (self.direction.x * self.direction.x);
             if self.direction.y >= 0.0 { self.direction.y = y_mag }
             else { self.direction.y = -y_mag }
         }
         if new_direction == Direction::Up && self.direction.y > -1.0{
             self.direction.y -= 0.05;
-            let x_mag = 1.0 - self.direction.y.abs();
+            let x_mag = 1.0 - (self.direction.y * self.direction.y);
             if self.direction.x >= 0.0 { self.direction.x = x_mag }
             else { self.direction.x = -x_mag }
         }
         if new_direction == Direction::Down && self.direction.y < 1.0{
             self.direction.y += 0.05;
-            let x_mag = 1.0 - self.direction.y.abs();
+            let x_mag = 1.0 - (self.direction.y * self.direction.y);
             if self.direction.x >= 0.0 { self.direction.x = x_mag }
             else { self.direction.x = -x_mag }
         }
