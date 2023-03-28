@@ -28,7 +28,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     let arrow_right = Image::load(&gfx, r"arrow_right.png").await?;
 
     let circle_image = Image::load(&gfx, r"circle.png").await?;
-    // let death_image = Image::load(&gfx, r"x.png").await?;
+    let death_image = Image::load(&gfx, r"x.png").await?;
     let wall_image = Image::load(&gfx, r"barrier.png").await?;
     let floor_image = Image::load(&gfx, r"ice.png").await?;
 
@@ -47,7 +47,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         GameObject::new(
             Vector::new(600.0, 300.0), 
             circle_image.clone(),
-            Vector::new(32.0, 32.0),
+            Vector::new(12.0, 12.0),
             Vector::new(0.0,0.0),
             0.0,
             WeaponState::Attack,
@@ -124,6 +124,16 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
 
         // Draw enemies
         for enemy in enemies.iter_mut() {
+            for bullet in bullets.iter() {
+                if bullet.collides_with(enemy){
+                    enemy.set_image(death_image.clone());
+                }
+            }
+            if enemy.collides_with(&player) {
+                player.set_image(death_image.clone());
+            }
+            enemy.move_towards(player.position());
+            enemy.carry_momentum(game_map.map());
             gfx.draw_image(&enemy.image(), enemy.sprite());
         }
 

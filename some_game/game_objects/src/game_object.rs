@@ -191,16 +191,16 @@ impl GameObject{
 
     pub fn move_towards(&mut self, target_location: Vector) {
     
-        if target_location.x < self.sprite.pos.x {
+        if target_location.x < self.position().x {
             self.move_left();
         }
-        if target_location.x > self.sprite.pos.x {
+        if target_location.x > self.position().x {
             self.move_right();
         }
-        if target_location.y < self.sprite.pos.y {
+        if target_location.y < self.position().y {
             self.move_up();
         }
-        if target_location.y > self.sprite.pos.y {
+        if target_location.y > self.position().y {
             self.move_down();
         }
         
@@ -209,11 +209,16 @@ impl GameObject{
     pub fn carry_momentum(&mut self, game_map: &Vec<GameObject>) {
 
         self.sprite.pos.x += self.velocity.x;
+        self.sprite.pos.y += self.velocity.y;
+        
+        if !self.collidable {
+            return;
+        }
+        
         if self.check_collisions(game_map){
             self.sprite.pos.x -= self.velocity.x;
         }
 
-        self.sprite.pos.y += self.velocity.y;
         if self.check_collisions(game_map){
             self.sprite.pos.y -= self.velocity.y;
         }
@@ -267,7 +272,7 @@ impl GameObject{
     }
 
     pub fn collides_with(&self, other_object: &GameObject) -> bool {
-        if other_object.is_collidable() && self.collidable {
+        if other_object.is_collidable() {
             return self.sprite.overlaps_rectangle(&other_object.sprite());
         }
         false
