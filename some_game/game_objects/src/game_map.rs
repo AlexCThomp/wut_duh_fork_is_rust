@@ -76,4 +76,5 @@ impl GameMap {
     pub fn map(&self) -> &Vec<GameObject> {
         &self.map
     }
+
 }

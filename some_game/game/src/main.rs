@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use game_objects::game_map::GameMap;
 use game_objects::game_object::{
     GameObject, 
@@ -22,81 +24,102 @@ fn main() {
 }
 
 async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> {
-    let player_image = Image::load(&gfx, r"green_circle.png").await?;
-    let enemy_image = Image::load(&gfx, r"green_circle.png").await?;
-    let weapon_image = Image::load(&gfx, r"green_circle.png").await?;
-    let death_image = Image::load(&gfx, r"red_x.png").await?;
-    let wall_image = Image::load(&gfx, r"wall.png").await?;
-    let floor_image = Image::load(&gfx, r"floor.png").await?;
+    let arrow_up = Image::load(&gfx, r"arrow_up.png").await?;
+    let arrow_left = Image::load(&gfx, r"arrow_left.png").await?;
+    let arrow_down = Image::load(&gfx, r"arrow_down.png").await?;
+    let arrow_right = Image::load(&gfx, r"arrow_right.png").await?;
 
-    let game_map = GameMap::new(wall_image, floor_image);
-    
-    let mut player = GameObject::new_with_weapon(
-        Vector::new(32.0, 32.0),  
-        player_image.clone(),
-        weapon_image,
+    let circle_image = Image::load(&gfx, r"circle.png").await?;
+    // let death_image = Image::load(&gfx, r"x.png").await?;
+    let wall_image = Image::load(&gfx, r"barrier.png").await?;
+    let floor_image = Image::load(&gfx, r"ice.png").await?;
+
+    let mut game_map = GameMap::new(wall_image, floor_image);
+
+    let mut actors: HashMap<&str, Vec<GameObject>> = HashMap::from([
+        ("players", Vec::new()),
+        ("enemies", Vec::new()),
+        ("bullets", Vec::new()),
+    ]);
+
+    actors.get_mut("players").expect("no players in actors map").push(
+        GameObject::new_with_direction(
+            Vector::new(32.0, 32.0),  
+            arrow_up,
+            arrow_left,
+            arrow_down,
+            arrow_right,
+        )
     );
 
-    let mut enemy = GameObject::new(
-        Vector::new(600.0, 300.0), 
-        enemy_image.clone(),
-        Vector::new(32.0, 32.0),
-        0.0,
-        WeaponState::Attack,
-        true,
+    actors.get_mut("enemies").expect("no enemies in actors map").push(
+        GameObject::new(
+            Vector::new(600.0, 300.0), 
+            circle_image.clone(),
+            Vector::new(32.0, 32.0),
+            0.0,
+            WeaponState::Attack,
+            true,
+        )
     );
     
     loop {
         while let Some(_) = input.next_event().await {}
 
-        // player.set_image(player_image.clone());
-        // enemy.set_image(enemy_image.clone());
-
-        player.un_attack();
-
         // moves
         if input.key_down(Key::A) {
-            player.move_left();
+            for player in actors.get_mut("players").expect("no players in actors map") {
+                player.move_left();
+            }
+            
         }
         if input.key_down(Key::D) {
-            player.move_right();
+            for player in actors.get_mut("players").expect("no players in actors map") {
+                player.move_right();
+            }
         }
         if input.key_down(Key::W) {
-            player.move_up();
+            for player in actors.get_mut("players").expect("no players in actors map") {
+                player.move_up();
+            }
         }
         if input.key_down(Key::S) {
-            player.move_down();
+            for player in actors.get_mut("players").expect("no players in actors map") {
+                player.move_down();
+            }
         }
 
         // direction changes
         if input.key_down(Key::Left) {
-            player.set_direction(Direction::Left);
+            for player in actors.get_mut("players").expect("no players in actors map") {
+                player.set_direction(Direction::Left);
+            }
         }
         if input.key_down(Key::Right) {
-            player.set_direction(Direction::Right);
+            for player in actors.get_mut("players").expect("no players in actors map") {
+                player.set_direction(Direction::Right);
+            }
         }
         if input.key_down(Key::Up) {
-            player.set_direction(Direction::Up);
+            for player in actors.get_mut("players").expect("no players in actors map") {
+                player.set_direction(Direction::Up);
+            }
         }
         if input.key_down(Key::Down) {
-            player.set_direction(Direction::Down);
+            for player in actors.get_mut("players").expect("no players in actors map") {
+                player.set_direction(Direction::Down);
+            }
         }
-        if input.key_down(Key::Space) {
-            player.attack();
-        }
-
-        if player.collides_with(&enemy) {
-            player.set_image(death_image.clone());
-        }
-
-        if player.weapon().collides_with(&enemy) && player.weapon_state() == WeaponState::Attack {
-            enemy.set_image(death_image.clone());
-        }
+        // if input.key_down(Key::Space) {
+        //     player.shoot(); TODO: Implement shoot action for player
+        // }
         
-        player.carry_momentum(game_map.map());
-        
-        // player.fall(game_map.map());
-        // enemy.fall(game_map.map());
+        for things in actors.values_mut() {
+            for thing in things {
+                thing.carry_momentum(game_map.map());
+            }
+        }
+        // player.carry_momentum(game_map.map());
 
         gfx.clear(Color::WHITE);
         // Draw Map
@@ -104,14 +127,20 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             gfx.draw_image(tile.image(), tile.sprite())
         }
 
+        // Draw actors
+        for things in actors.values_mut() {
+            for thing in things {
+                gfx.draw_image(&thing.image(), thing.sprite());
+            }
+        }
         // Draw player
-        gfx.draw_image(&player.image(), player.sprite());
+        // gfx.draw_image(&player.image(), player.sprite());
 
         // Draw weapon
-        gfx.draw_image(&player.weapon().image() ,player.weapon().sprite());
+        // gfx.draw_image(&player.weapon().image() ,player.weapon().sprite());
 
         //Draw enemy
-        gfx.draw_image(&enemy.image(), enemy.sprite());
+        // gfx.draw_image(&enemy.image(), enemy.sprite());
 
         gfx.present(&window)?;
     }
