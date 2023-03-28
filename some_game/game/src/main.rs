@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use game_objects::game_map::GameMap;
 use game_objects::game_object::{
     GameObject, 
@@ -92,7 +90,18 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         if input.key_down(Key::Space) {
             player.shoot(&mut bullets);
         }
-        
+
+        // cull bullets
+        bullets.retain(|bullet| {
+            let delete = {
+                bullet.position().x > (32.0*32.0) ||
+                bullet.position().x < 0.0 ||
+                bullet.position().y > (24.0*32.0) ||
+                bullet.position().y < 0.0
+            };
+            !delete
+        });
+
         player.carry_momentum(game_map.map());
         for bullet in bullets.iter_mut(){
             bullet.carry_momentum(game_map.map());

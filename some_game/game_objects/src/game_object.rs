@@ -162,7 +162,7 @@ impl GameObject{
                 WeaponState::Attack,
                 false,
             )
-        )
+        );
     }
 
     pub fn calculate_bullet_position(&mut self, direction: Direction, size: Vector) -> Vector {
@@ -267,7 +267,7 @@ impl GameObject{
     }
 
     pub fn collides_with(&self, other_object: &GameObject) -> bool {
-        if other_object.is_collidable(){
+        if other_object.is_collidable() && self.collidable {
             return self.sprite.overlaps_rectangle(&other_object.sprite());
         }
         false
