@@ -197,7 +197,7 @@ impl GameObject{
         let mut weapon_position = center;
 
         // displace in this objects direction by the radius
-        let displace_vector = self.direction * object_radius;
+        let displace_vector = self.direction * (object_radius + (weapon_size.x/2.0));
         weapon_position.x += displace_vector.x;
         weapon_position.y += displace_vector.y;
 
@@ -304,6 +304,15 @@ impl GameObject{
             else { self.direction.x = -x_mag }
         }
         
+    }
+
+    pub fn got_shot(&self, bullets: &Vec<GameObject>) -> bool {
+        for bullet in bullets{
+            if self.sprite.overlaps_rectangle(&bullet.sprite()){
+                return true;
+            }
+        }
+        return false;
     }
 
     pub fn set_weapon(&mut self, new_weapon: GameObject) {
