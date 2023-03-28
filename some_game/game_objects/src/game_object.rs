@@ -33,42 +33,43 @@ impl GameObject{
 
     pub fn new(
         position: Vector, 
-        new_image: Image, 
+        image: Image, 
         size: Vector, 
-        new_range: f32, 
-        new_weapon_state: WeaponState, 
-        is_collidable: bool
+        velocity: Vector,
+        range: f32, 
+        state: WeaponState, 
+        collidable: bool
     ) -> GameObject {
         
-        let new_sprite = Rectangle::new(position, size);
+        let sprite = Rectangle::new(position, size);
 
         GameObject {
-            sprite: new_sprite,
+            sprite,
             direction: Direction::Right,
-            velocity: Vector::new(0.0,0.0),
+            velocity,
             acceleration: 0.1,
             max_speed: 4.0,
-            image: new_image.clone(),
+            image: image.clone(),
             images: HashMap::from([
-                (Direction::Up, new_image.clone()),
-                (Direction::Left, new_image.clone()),
-                (Direction::Down, new_image.clone()),
-                (Direction::Right, new_image.clone()),
+                (Direction::Up, image.clone()),
+                (Direction::Left, image.clone()),
+                (Direction::Down, image.clone()),
+                (Direction::Right, image.clone()),
             ]),
-            collidable: is_collidable,
-            range: new_range,
-            state: new_weapon_state,
+            collidable,
+            range,
+            state,
         }
     }
 
     pub fn new_floor(position: Vector, new_image: Image) -> GameObject {
         let size = Vector::new(32.0, 32.0);
-        GameObject::new(position, new_image, size, 0.0, WeaponState::Default, false)
+        GameObject::new(position, new_image, size, Vector::new(0.0, 0.0), 0.0, WeaponState::Default, false)
     }
 
     pub fn new_wall(position: Vector, new_image: Image) -> GameObject {
         let size = Vector::new(32.0, 32.0);
-        GameObject::new(position, new_image, size, 0.0, WeaponState::Default, true)
+        GameObject::new(position, new_image, size, Vector::new(0.0,0.0), 0.0, WeaponState::Default, true)
     }
 
     pub fn new_with_direction(
@@ -134,6 +135,59 @@ impl GameObject{
         }
         
     }
+
+    pub fn shoot(&mut self, bullets: &mut Vec<GameObject>) {
+        let bullet_size = Vector::new(12.0,12.0);
+        let bullet_position = self.calculate_bullet_position(self.direction, bullet_size);
+        let mut bullet_velocity = Vector::new(0.0,0.0);
+        if self.direction == Direction::Right {
+            bullet_velocity.x = 12.0;
+        }
+        if self.direction == Direction::Left {
+            bullet_velocity.x = -12.0;
+        }
+        if self.direction == Direction::Up {
+            bullet_velocity.y = -12.0;
+        }
+        if self.direction == Direction::Down {
+            bullet_velocity.y = 12.0;
+        }
+        bullets.push(
+            GameObject::new(
+                bullet_position,
+                self.image.clone(),
+                bullet_size,
+                bullet_velocity,
+                self.range,
+                WeaponState::Attack,
+                false,
+            )
+        )
+    }
+
+    pub fn calculate_bullet_position(&mut self, direction: Direction, size: Vector) -> Vector {
+  
+        let weapon_positions = HashMap::from([
+            (Direction::Up, Vector::new(
+                    self.sprite.pos.x + (self.size().x / 2.0 - size.x / 2.0), 
+                    self.sprite.pos.y - size.y)
+            ),
+            (Direction::Right, Vector::new(
+                    self.sprite.pos.x + self.size().x, 
+                    self.sprite.pos.y + (self.size().y / 2.0 - size.y / 2.0))
+            ),
+            (Direction::Down, Vector::new(
+                    self.sprite.pos.x + (self.size().x / 2.0 - size.x / 2.0),  
+                    self.sprite.pos.y + self.size().y)
+            ),
+            (Direction::Left, Vector::new(
+                    self.sprite.pos.x - size.x, 
+                    self.sprite.pos.y + (self.size().y / 2.0 - size.y / 2.0))
+            ),
+        ]);
+        weapon_positions[&direction]
+    }
+
 
     pub fn move_towards(&mut self, target_location: Vector) {
     

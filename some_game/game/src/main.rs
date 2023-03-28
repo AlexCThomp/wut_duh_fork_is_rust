@@ -34,90 +34,68 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     let wall_image = Image::load(&gfx, r"barrier.png").await?;
     let floor_image = Image::load(&gfx, r"ice.png").await?;
 
-    let mut game_map = GameMap::new(wall_image, floor_image);
+    let game_map = GameMap::new(wall_image, floor_image);
 
-    let mut actors: HashMap<&str, Vec<GameObject>> = HashMap::from([
-        ("players", Vec::new()),
-        ("enemies", Vec::new()),
-        ("bullets", Vec::new()),
-    ]);
-
-    actors.get_mut("players").expect("no players in actors map").push(
-        GameObject::new_with_direction(
-            Vector::new(32.0, 32.0),  
-            arrow_up,
-            arrow_left,
-            arrow_down,
-            arrow_right,
-        )
+    let mut player = GameObject::new_with_direction(
+        Vector::new(32.0, 32.0),  
+        arrow_up,
+        arrow_left,
+        arrow_down,
+        arrow_right,
     );
 
-    actors.get_mut("enemies").expect("no enemies in actors map").push(
+    let mut enemies: Vec<GameObject> = Vec::new();
+    enemies.push(
         GameObject::new(
             Vector::new(600.0, 300.0), 
             circle_image.clone(),
             Vector::new(32.0, 32.0),
+            Vector::new(0.0,0.0),
             0.0,
             WeaponState::Attack,
             true,
         )
     );
+
+    let mut bullets: Vec<GameObject> = Vec::new();
     
     loop {
         while let Some(_) = input.next_event().await {}
 
         // moves
         if input.key_down(Key::A) {
-            for player in actors.get_mut("players").expect("no players in actors map") {
-                player.move_left();
-            }
-            
+            player.move_left();
         }
         if input.key_down(Key::D) {
-            for player in actors.get_mut("players").expect("no players in actors map") {
-                player.move_right();
-            }
+            player.move_right();
         }
         if input.key_down(Key::W) {
-            for player in actors.get_mut("players").expect("no players in actors map") {
-                player.move_up();
-            }
+            player.move_up();
         }
         if input.key_down(Key::S) {
-            for player in actors.get_mut("players").expect("no players in actors map") {
-                player.move_down();
-            }
+            player.move_down();
         }
 
         // direction changes
         if input.key_down(Key::Left) {
-            for player in actors.get_mut("players").expect("no players in actors map") {
-                player.set_direction(Direction::Left);
-            }
+            player.set_direction(Direction::Left);
         }
         if input.key_down(Key::Right) {
-            for player in actors.get_mut("players").expect("no players in actors map") {
-                player.set_direction(Direction::Right);
-            }
+            player.set_direction(Direction::Right);
         }
         if input.key_down(Key::Up) {
-            for player in actors.get_mut("players").expect("no players in actors map") {
-                player.set_direction(Direction::Up);
-            }
+            player.set_direction(Direction::Up);
         }
         if input.key_down(Key::Down) {
-            for player in actors.get_mut("players").expect("no players in actors map") {
-                player.set_direction(Direction::Down);
-            }
+            player.set_direction(Direction::Down);
         }
-        // if input.key_down(Key::Space) {
-        //     player.shoot(); TODO: Implement shoot action for player
-        // }
+        if input.key_down(Key::Space) {
+            player.shoot(&mut bullets);
+        }
         
-        for things in actors.values_mut() {
-            for thing in things {
-                thing.carry_momentum(game_map.map());
-            }
+        player.carry_momentum(game_map.map());
+        for bullet in bullets.iter_mut(){
+            bullet.carry_momentum(game_map.map());
         }
         // player.carry_momentum(game_map.map());
 
@@ -127,20 +105,18 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             gfx.draw_image(tile.image(), tile.sprite())
         }
 
-        // Draw actors
-        for things in actors.values_mut() {
-            for thing in things {
-                gfx.draw_image(&thing.image(), thing.sprite());
-            }
-        }
         // Draw player
-        // gfx.draw_image(&player.image(), player.sprite());
+        gfx.draw_image(&player.image(), player.sprite());
 
-        // Draw weapon
-        // gfx.draw_image(&player.weapon().image() ,player.weapon().sprite());
+        // Draw bullets
+        for bullet in bullets.iter_mut(){
+            gfx.draw_image(&bullet.image(), bullet.sprite());
+        }
 
-        //Draw enemy
-        // gfx.draw_image(&enemy.image(), enemy.sprite());
+        // Draw enemies
+        for enemy in enemies.iter_mut() {
+            gfx.draw_image(&enemy.image(), enemy.sprite());
+        }
 
         gfx.present(&window)?;
     }
