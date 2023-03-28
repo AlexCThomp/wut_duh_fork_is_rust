@@ -280,26 +280,26 @@ impl GameObject{
         // formula: direction.x.abs() + direction.y.abs() = 1
 
         if new_direction == Direction::Left && self.direction.x > -1.0{
-            self.direction.x -= 0.1;
+            self.direction.x -= 0.05;
             let y_mag = 1.0 - self.direction.x.abs();
             if self.direction.y >= 0.0 { self.direction.y = y_mag }
             else { self.direction.y = -y_mag }
         }
         if new_direction == Direction::Right && self.direction.x < 1.0{
-            self.direction.x += 0.1;
+            self.direction.x += 0.05;
             let y_mag = 1.0 - self.direction.x.abs();
             if self.direction.y >= 0.0 { self.direction.y = y_mag }
             else { self.direction.y = -y_mag }
         }
         if new_direction == Direction::Up && self.direction.y > -1.0{
-            self.direction.y -= 0.1;
-            let x_mag = 1.0 - self.direction.x.abs();
+            self.direction.y -= 0.05;
+            let x_mag = 1.0 - self.direction.y.abs();
             if self.direction.x >= 0.0 { self.direction.x = x_mag }
             else { self.direction.x = -x_mag }
         }
         if new_direction == Direction::Down && self.direction.y < 1.0{
-            self.direction.y += 0.1;
-            let x_mag = 1.0 - self.direction.x.abs();
+            self.direction.y += 0.05;
+            let x_mag = 1.0 - self.direction.y.abs();
             if self.direction.x >= 0.0 { self.direction.x = x_mag }
             else { self.direction.x = -x_mag }
         }
