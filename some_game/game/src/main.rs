@@ -35,12 +35,13 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
 
     let game_map = GameMap::new(wall_image, floor_image);
 
-    let mut player = GameObject::new_with_direction(
+    let mut player = GameObject::new_with_weapon(
         Vector::new(32.0, 32.0),  
         arrow_up,
         arrow_left,
         arrow_down,
         arrow_right,
+        circle_image.clone()
     );
 
     let mut enemies: Vec<GameObject> = Vec::new();
@@ -118,6 +119,9 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         // Draw player
         gfx.draw_image(&player.image(), player.sprite());
 
+        // Draw weapon
+        gfx.draw_image(&player.weapon().image(), player.weapon().sprite());
+
         // Draw bullets
         for bullet in bullets.iter_mut(){
             gfx.draw_image(&bullet.image(), bullet.sprite());
@@ -133,8 +137,8 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             if enemy.collides_with(&player) {
                 player.set_image(death_image.clone());
             }
-            enemy.move_towards(player.position());
-            enemy.carry_momentum(game_map.map());
+            // enemy.move_towards(player.position());
+            // enemy.carry_momentum(game_map.map());
             gfx.draw_image(&enemy.image(), enemy.sprite());
         }
 

@@ -16,9 +16,11 @@ pub enum WeaponState {
     Attack
 }
 
+#[derive(Clone)]
 pub struct GameObject {
+    weapon: Option<Box<GameObject>>,
     sprite: Rectangle,
-    direction: Direction,
+    direction: Vector,
     velocity: Vector,
     acceleration: f32,
     max_speed: f32,
@@ -44,8 +46,9 @@ impl GameObject{
         let sprite = Rectangle::new(position, size);
 
         GameObject {
+            weapon: None,
             sprite,
-            direction: Direction::Right,
+            direction: Vector::new(1.0, 0.0),
             velocity,
             acceleration: 0.1,
             max_speed: 4.0,
@@ -60,6 +63,30 @@ impl GameObject{
             range,
             state,
         }
+    }
+
+    pub fn new_with_weapon(
+        position: Vector, 
+        up_image: Image,
+        left_image: Image,
+        down_image: Image,
+        right_image: Image,
+        weapon_image: Image
+    ) -> GameObject {
+        let mut new_object = GameObject::new_with_direction(
+            position, up_image, left_image, down_image, right_image
+        );
+
+        let weapon_size = Vector::new(12.0, 12.0);
+        let new_weapon = GameObject::new_weapon(new_object.calculate_weapon_position(weapon_size), weapon_image.clone());
+        new_object.set_weapon(new_weapon);
+
+        new_object
+    }
+
+    pub fn new_weapon(position: Vector, new_image: Image) -> GameObject {
+        let size = Vector::new(12.0, 12.0);
+        GameObject::new(position, new_image, size, Vector::new(0.0, 0.0), 0.0, WeaponState::Default, false)
     }
 
     pub fn new_floor(position: Vector, new_image: Image) -> GameObject {
@@ -84,8 +111,9 @@ impl GameObject{
         let new_sprite = Rectangle::new(position, size);
 
         GameObject {
+            weapon: None,
             sprite: new_sprite,
-            direction: Direction::Right,
+            direction: Vector::new(1.0, 0.0),
             velocity: Vector::new(0.0,0.0),
             acceleration: 0.1,
             max_speed: 4.0,
@@ -105,6 +133,7 @@ impl GameObject{
 
     pub fn move_up(&mut self) {
 
+        self.image = self.images[&Direction::Up].clone();
         let new_velocity = self.velocity.y - self.acceleration;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.y = new_velocity;
@@ -113,6 +142,7 @@ impl GameObject{
 
     pub fn move_down(&mut self) {
 
+        self.image = self.images[&Direction::Down].clone();
         let new_velocity = self.velocity.y + self.acceleration;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.y = new_velocity;
@@ -121,6 +151,7 @@ impl GameObject{
 
     pub fn move_left(&mut self) {
 
+        self.image = self.images[&Direction::Left].clone();
         let new_velocity = self.velocity.x - self.acceleration;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.x = new_velocity;
@@ -129,6 +160,7 @@ impl GameObject{
 
     pub fn move_right(&mut self) {
 
+        self.image = self.images[&Direction::Right].clone();
         let new_velocity = self.velocity.x + self.acceleration;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.x = new_velocity;
@@ -137,27 +169,13 @@ impl GameObject{
     }
 
     pub fn shoot(&mut self, bullets: &mut Vec<GameObject>) {
-        let bullet_size = Vector::new(12.0,12.0);
-        let bullet_position = self.calculate_bullet_position(self.direction, bullet_size);
-        let mut bullet_velocity = Vector::new(0.0,0.0);
-        if self.direction == Direction::Right {
-            bullet_velocity.x = 12.0;
-        }
-        if self.direction == Direction::Left {
-            bullet_velocity.x = -12.0;
-        }
-        if self.direction == Direction::Up {
-            bullet_velocity.y = -12.0;
-        }
-        if self.direction == Direction::Down {
-            bullet_velocity.y = 12.0;
-        }
+        
         bullets.push(
             GameObject::new(
-                bullet_position,
-                self.image.clone(),
-                bullet_size,
-                bullet_velocity,
+                self.weapon().position(),
+                self.weapon().image().clone(),
+                self.weapon().size(),
+                self.direction*12.0,
                 self.range,
                 WeaponState::Attack,
                 false,
@@ -165,27 +183,49 @@ impl GameObject{
         );
     }
 
-    pub fn calculate_bullet_position(&mut self, direction: Direction, size: Vector) -> Vector {
-  
-        let weapon_positions = HashMap::from([
-            (Direction::Up, Vector::new(
-                    self.sprite.pos.x + (self.size().x / 2.0 - size.x / 2.0), 
-                    self.sprite.pos.y - size.y)
-            ),
-            (Direction::Right, Vector::new(
-                    self.sprite.pos.x + self.size().x, 
-                    self.sprite.pos.y + (self.size().y / 2.0 - size.y / 2.0))
-            ),
-            (Direction::Down, Vector::new(
-                    self.sprite.pos.x + (self.size().x / 2.0 - size.x / 2.0),  
-                    self.sprite.pos.y + self.size().y)
-            ),
-            (Direction::Left, Vector::new(
-                    self.sprite.pos.x - size.x, 
-                    self.sprite.pos.y + (self.size().y / 2.0 - size.y / 2.0))
-            ),
-        ]);
-        weapon_positions[&direction]
+    pub fn calculate_weapon_position(&self, weapon_size: Vector) -> Vector {
+        
+        // compute center of this game object
+        let center = Vector::new(
+            self.position().x + (self.size().x/2.0), 
+            self.position().y + (self.size().y/2.0));
+        
+        // compute minimum radius that subsumes this object
+        let object_radius = ((self.size().x/2.0) * (self.size().x/2.0) + (self.size().x/2.0) * (self.size().x/2.0)).sqrt();
+        
+        // place weapon at center of this object
+        let mut weapon_position = center;
+
+        // displace in this objects direction by the radius
+        let displace_vector = self.direction * object_radius;
+        weapon_position.x += displace_vector.x;
+        weapon_position.y += displace_vector.y;
+
+        // center the weapon
+        weapon_position.x -= weapon_size.x/2.0;
+        weapon_position.y -= weapon_size.y/2.0;
+
+        weapon_position
+
+        // let weapon_position = HashMap::from([
+        //     (Direction::Up, Vector::new(
+        //             self.sprite.pos.x + (self.size().x / 2.0 - size.x / 2.0), 
+        //             self.sprite.pos.y - size.y)
+        //     ),
+        //     (Direction::Right, Vector::new(
+        //             self.sprite.pos.x + self.size().x, 
+        //             self.sprite.pos.y + (self.size().y / 2.0 - size.y / 2.0))
+        //     ),
+        //     (Direction::Down, Vector::new(
+        //             self.sprite.pos.x + (self.size().x / 2.0 - size.x / 2.0),  
+        //             self.sprite.pos.y + self.size().y)
+        //     ),
+        //     (Direction::Left, Vector::new(
+        //             self.sprite.pos.x - size.x, 
+        //             self.sprite.pos.y + (self.size().y / 2.0 - size.y / 2.0))
+        //     ),
+        // ]);
+        // weapon_position[&direction]
     }
 
 
@@ -209,18 +249,17 @@ impl GameObject{
     pub fn carry_momentum(&mut self, game_map: &Vec<GameObject>) {
 
         self.sprite.pos.x += self.velocity.x;
-        self.sprite.pos.y += self.velocity.y;
-        
-        if !self.collidable {
-            return;
-        }
-        
         if self.check_collisions(game_map){
             self.sprite.pos.x -= self.velocity.x;
         }
 
+        self.sprite.pos.y += self.velocity.y;
         if self.check_collisions(game_map){
             self.sprite.pos.y -= self.velocity.y;
+        }
+        if !self.weapon.is_none() {
+            let new_weapon_position = self.calculate_weapon_position(self.weapon().size());
+            self.weapon.as_mut().expect("no weapon carry momentum").set_position(new_weapon_position);
         }
     }
 
@@ -238,12 +277,44 @@ impl GameObject{
 
     pub fn set_direction(&mut self, new_direction: Direction) {
 
-        self.direction = new_direction;
-        self.image = self.images[&new_direction].clone();
+        // formula: direction.x.abs() + direction.y.abs() = 1
+
+        if new_direction == Direction::Left && self.direction.x > -1.0{
+            self.direction.x -= 0.1;
+            let y_mag = 1.0 - self.direction.x.abs();
+            if self.direction.y >= 0.0 { self.direction.y = y_mag }
+            else { self.direction.y = -y_mag }
+        }
+        if new_direction == Direction::Right && self.direction.x < 1.0{
+            self.direction.x += 0.1;
+            let y_mag = 1.0 - self.direction.x.abs();
+            if self.direction.y >= 0.0 { self.direction.y = y_mag }
+            else { self.direction.y = -y_mag }
+        }
+        if new_direction == Direction::Up && self.direction.y > -1.0{
+            self.direction.y -= 0.1;
+            let x_mag = 1.0 - self.direction.x.abs();
+            if self.direction.x >= 0.0 { self.direction.x = x_mag }
+            else { self.direction.x = -x_mag }
+        }
+        if new_direction == Direction::Down && self.direction.y < 1.0{
+            self.direction.y += 0.1;
+            let x_mag = 1.0 - self.direction.x.abs();
+            if self.direction.x >= 0.0 { self.direction.x = x_mag }
+            else { self.direction.x = -x_mag }
+        }
         
     }
 
-    pub fn set_speed(&mut self, new_speed: f32) {
+    pub fn set_weapon(&mut self, new_weapon: GameObject) {
+        self.weapon = Some(Box::new(new_weapon));
+    }
+
+    pub fn weapon(&self) -> &GameObject {
+        &self.weapon.as_ref().expect("No weapon to get")
+    }
+
+    pub fn set_acceleration(&mut self, new_speed: f32) {
         self.acceleration = new_speed;
     }
 
@@ -272,7 +343,7 @@ impl GameObject{
     }
 
     pub fn collides_with(&self, other_object: &GameObject) -> bool {
-        if other_object.is_collidable() {
+        if other_object.is_collidable() && self.is_collidable() {
             return self.sprite.overlaps_rectangle(&other_object.sprite());
         }
         false
