@@ -87,10 +87,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         // cull bullets
         bullets.retain(|bullet| {
             let delete = {
-                bullet.position().x > (32.0*32.0) ||
-                bullet.position().x < 0.0 ||
-                bullet.position().y > (24.0*32.0) ||
-                bullet.position().y < 0.0
+                bullet.out_of_range()
             };
             !delete
         });
@@ -99,7 +96,6 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         for bullet in bullets.iter_mut(){
             bullet.carry_momentum(game_map.map());
         }
-        // player.carry_momentum(game_map.map());
 
         gfx.clear(Color::WHITE);
         // Draw Map

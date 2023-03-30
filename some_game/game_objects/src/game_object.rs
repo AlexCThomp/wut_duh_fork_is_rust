@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use quicksilver::geom::{Vector, Rectangle, Shape};
+use quicksilver::geom::{Vector, Rectangle, Shape, Circle};
 use quicksilver::graphics::{Image};
 use rand::Rng;
 
@@ -20,6 +20,7 @@ pub enum WeaponState {
 #[derive(Clone)]
 pub struct GameObject {
     weapon: Option<Box<GameObject>>,
+    start_position: Vector,
     sprite: Rectangle,
     direction: Vector,
     velocity: Vector,
@@ -35,7 +36,7 @@ pub struct GameObject {
 impl GameObject{
 
     pub fn new(
-        position: Vector, 
+        position: Vector,
         image: Image, 
         size: Vector, 
         velocity: Vector,
@@ -48,6 +49,7 @@ impl GameObject{
 
         GameObject {
             weapon: None,
+            start_position: position,
             sprite,
             direction: Vector::new(1.0, 0.0),
             velocity,
@@ -129,6 +131,7 @@ impl GameObject{
 
         GameObject {
             weapon: None,
+            start_position: position,
             sprite: new_sprite,
             direction: Vector::new(1.0, 0.0),
             velocity: Vector::new(0.0,0.0),
@@ -143,7 +146,7 @@ impl GameObject{
             image: right_image.clone(),
             collidable: true,
             state: WeaponState::Default,
-            range: 0.0,
+            range: 100.0,
         }
 
     }
@@ -332,6 +335,11 @@ impl GameObject{
         return false;
     }
 
+    pub fn out_of_range(&self) -> bool {
+        let range_radius = Circle::new(self.start_position, self.range);
+        !self.sprite().overlaps_circle(&range_radius)
+    }
+
     pub fn set_weapon(&mut self, new_weapon: GameObject) {
         self.weapon = Some(Box::new(new_weapon));
     }
@@ -381,6 +389,10 @@ impl GameObject{
 
     pub fn range(&self) -> f32 {
         self.range
+    }
+
+    pub fn set_range(&mut self, new_range: f32) {
+        self.range = new_range;
     }
 
     pub fn state(&self) -> WeaponState {
