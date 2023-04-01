@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::num::NonZeroUsize;
+use quicksilver::Timer;
 use quicksilver::geom::{Vector, Rectangle, Shape, Circle};
 use quicksilver::graphics::{Image};
 use rand::Rng;
@@ -31,6 +33,7 @@ pub struct GameObject {
     collidable: bool,
     state: WeaponState,
     range: f32,
+    shoot_rate: Timer,
 }
 
 impl GameObject{
@@ -65,6 +68,7 @@ impl GameObject{
             collidable,
             range,
             state,
+            shoot_rate: Timer::time_per_second(2.0),
         }
     }
 
@@ -89,7 +93,7 @@ impl GameObject{
 
     pub fn new_random_enemy(image: Image) -> GameObject {
 
-        let x_coord = rand::thread_rng().gen_range(200..700) as f32;
+        let x_coord = rand::thread_rng().gen_range(200..800) as f32;
         let y_coord = rand::thread_rng().gen_range(100..700) as f32;
 
         GameObject::new(
@@ -146,7 +150,8 @@ impl GameObject{
             image: right_image.clone(),
             collidable: true,
             state: WeaponState::Default,
-            range: 100.0,
+            range: 300.0,
+            shoot_rate: Timer::time_per_second(2.0),
         }
 
     }
@@ -190,17 +195,20 @@ impl GameObject{
 
     pub fn shoot(&mut self, bullets: &mut Vec<GameObject>) {
         
-        bullets.push(
-            GameObject::new(
-                self.weapon().position(),
-                self.weapon().image().clone(),
-                self.weapon().size(),
-                self.direction*12.0,
-                self.range,
-                WeaponState::Attack,
-                false,
-            )
-        );
+        if self.shoot_rate.exhaust() >= NonZeroUsize::new(1) {
+            bullets.push(
+                GameObject::new(
+                    self.weapon().position(),
+                    self.weapon().image().clone(),
+                    self.weapon().size(),
+                    self.direction*8.0,
+                    self.range,
+                    WeaponState::Attack,
+                    false,
+                )
+            );
+            self.shoot_rate.reset();
+        }
     }
 
     pub fn calculate_weapon_position(&self, weapon_size: Vector) -> Vector {
@@ -295,7 +303,7 @@ impl GameObject{
         collision_detected
     }
 
-    pub fn set_direction(&mut self, new_direction: Direction) {
+    pub fn update_direction(&mut self, new_direction: Direction) {
 
         // formula: direction.x^2 + direction.y^2 = 1
 

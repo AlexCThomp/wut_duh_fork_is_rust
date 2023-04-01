@@ -22,6 +22,7 @@ fn main() {
 }
 
 async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> {
+
     let arrow_up = Image::load(&gfx, r"arrow_up.png").await?;
     let arrow_left = Image::load(&gfx, r"arrow_left.png").await?;
     let arrow_down = Image::load(&gfx, r"arrow_down.png").await?;
@@ -67,18 +68,19 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             player.move_down();
         }
 
+
         // direction changes
         if input.key_down(Key::Left) {
-            player.set_direction(Direction::Left);
+            player.update_direction(Direction::Left);
         }
         if input.key_down(Key::Right) {
-            player.set_direction(Direction::Right);
+            player.update_direction(Direction::Right);
         }
         if input.key_down(Key::Up) {
-            player.set_direction(Direction::Up);
+            player.update_direction(Direction::Up);
         }
         if input.key_down(Key::Down) {
-            player.set_direction(Direction::Down);
+            player.update_direction(Direction::Down);
         }
         if input.key_down(Key::Space) {
             player.shoot(&mut bullets);
