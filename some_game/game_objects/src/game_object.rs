@@ -268,7 +268,7 @@ impl GameObject{
             self.sprite.pos.y -= self.velocity.y;
             self.velocity.y = 0.0;
         }
-        if !self.weapon.is_none() {
+        if self.weapon.is_some() {
             let new_weapon_position = self.calculate_weapon_position(self.weapon().size());
             self.weapon.as_mut().expect("no weapon carry momentum").set_position(new_weapon_position);
         }
