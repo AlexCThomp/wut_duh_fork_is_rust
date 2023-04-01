@@ -33,20 +33,20 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     let wall_image = Image::load(&gfx, r"barrier.png").await?;
     let floor_image = Image::load(&gfx, r"ice.png").await?;
 
-    let game_map = GameMap::new(wall_image, floor_image);
+    let game_map = GameMap::new(&wall_image, &floor_image);
 
     let mut player = GameObject::new_with_weapon(
         Vector::new(32.0, 32.0),  
-        arrow_up,
-        arrow_left,
-        arrow_down,
-        arrow_right,
-        circle_image.clone()
+        &arrow_up,
+        &arrow_left,
+        &arrow_down,
+        &arrow_right,
+        &circle_image
     );
 
     let mut enemies: Vec<GameObject> = Vec::new();
     for _ in 0..10 {
-        enemies.push(GameObject::new_random_enemy(circle_image.clone()));
+        enemies.push(GameObject::new_random_enemy(&circle_image));
     }
 
     let mut bullets: Vec<GameObject> = Vec::new();

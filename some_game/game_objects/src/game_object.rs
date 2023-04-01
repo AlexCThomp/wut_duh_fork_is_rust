@@ -40,7 +40,7 @@ impl GameObject{
 
     pub fn new(
         position: Vector,
-        image: Image, 
+        image: &Image, 
         size: Vector, 
         velocity: Vector,
         range: f32, 
@@ -74,31 +74,31 @@ impl GameObject{
 
     pub fn new_with_weapon(
         position: Vector, 
-        up_image: Image,
-        left_image: Image,
-        down_image: Image,
-        right_image: Image,
-        weapon_image: Image
+        up_image: &Image,
+        left_image: &Image,
+        down_image: &Image,
+        right_image: &Image,
+        weapon_image: &Image
     ) -> GameObject {
         let mut new_object = GameObject::new_with_direction(
             position, up_image, left_image, down_image, right_image
         );
 
         let weapon_size = Vector::new(12.0, 12.0);
-        let new_weapon = GameObject::new_weapon(new_object.calculate_weapon_position(weapon_size), weapon_image.clone());
+        let new_weapon = GameObject::new_weapon(new_object.calculate_weapon_position(weapon_size), weapon_image);
         new_object.set_weapon(new_weapon);
 
         new_object
     }
 
-    pub fn new_random_enemy(image: Image) -> GameObject {
+    pub fn new_random_enemy(image: &Image) -> GameObject {
 
         let x_coord = rand::thread_rng().gen_range(200..800) as f32;
         let y_coord = rand::thread_rng().gen_range(100..700) as f32;
 
         GameObject::new(
             Vector::new(x_coord, y_coord), 
-            image.clone(),
+            image,
             Vector::new(12.0, 12.0),
             Vector::new(0.0,0.0),
             0.0,
@@ -107,27 +107,27 @@ impl GameObject{
         )
     }
 
-    pub fn new_weapon(position: Vector, new_image: Image) -> GameObject {
+    pub fn new_weapon(position: Vector, new_image: &Image) -> GameObject {
         let size = Vector::new(12.0, 12.0);
         GameObject::new(position, new_image, size, Vector::new(0.0, 0.0), 0.0, WeaponState::Default, false)
     }
 
-    pub fn new_floor(position: Vector, new_image: Image) -> GameObject {
+    pub fn new_floor(position: Vector, new_image: &Image) -> GameObject {
         let size = Vector::new(32.0, 32.0);
         GameObject::new(position, new_image, size, Vector::new(0.0, 0.0), 0.0, WeaponState::Default, false)
     }
 
-    pub fn new_wall(position: Vector, new_image: Image) -> GameObject {
+    pub fn new_wall(position: Vector, new_image: &Image) -> GameObject {
         let size = Vector::new(32.0, 32.0);
         GameObject::new(position, new_image, size, Vector::new(0.0,0.0), 0.0, WeaponState::Default, true)
     }
 
     pub fn new_with_direction(
         position: Vector, 
-        up_image: Image,
-        left_image: Image,
-        down_image: Image,
-        right_image: Image, 
+        up_image: &Image,
+        left_image: &Image,
+        down_image: &Image,
+        right_image: &Image, 
         ) -> GameObject {
 
         let size = Vector::new(32.0, 32.0);
@@ -199,9 +199,9 @@ impl GameObject{
             bullets.push(
                 GameObject::new(
                     self.weapon().position(),
-                    self.weapon().image().clone(),
+                    self.weapon().image(),
                     self.weapon().size(),
-                    self.direction*8.0,
+                    self.direction*12.0,
                     self.range,
                     WeaponState::Attack,
                     false,
