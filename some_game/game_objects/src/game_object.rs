@@ -68,7 +68,7 @@ impl GameObject{
             collidable,
             range,
             state,
-            shoot_rate: Timer::time_per_second(2.0),
+            shoot_rate: Timer::time_per_second(4.0),
         }
     }
 
@@ -235,25 +235,6 @@ impl GameObject{
 
         weapon_position
 
-        // let weapon_position = HashMap::from([
-        //     (Direction::Up, Vector::new(
-        //             self.sprite.pos.x + (self.size().x / 2.0 - size.x / 2.0), 
-        //             self.sprite.pos.y - size.y)
-        //     ),
-        //     (Direction::Right, Vector::new(
-        //             self.sprite.pos.x + self.size().x, 
-        //             self.sprite.pos.y + (self.size().y / 2.0 - size.y / 2.0))
-        //     ),
-        //     (Direction::Down, Vector::new(
-        //             self.sprite.pos.x + (self.size().x / 2.0 - size.x / 2.0),  
-        //             self.sprite.pos.y + self.size().y)
-        //     ),
-        //     (Direction::Left, Vector::new(
-        //             self.sprite.pos.x - size.x, 
-        //             self.sprite.pos.y + (self.size().y / 2.0 - size.y / 2.0))
-        //     ),
-        // ]);
-        // weapon_position[&direction]
     }
 
 
@@ -279,11 +260,13 @@ impl GameObject{
         self.sprite.pos.x += self.velocity.x;
         if self.check_collisions(game_map){
             self.sprite.pos.x -= self.velocity.x;
+            self.velocity.x = 0.0;
         }
 
         self.sprite.pos.y += self.velocity.y;
         if self.check_collisions(game_map){
             self.sprite.pos.y -= self.velocity.y;
+            self.velocity.y = 0.0;
         }
         if !self.weapon.is_none() {
             let new_weapon_position = self.calculate_weapon_position(self.weapon().size());
