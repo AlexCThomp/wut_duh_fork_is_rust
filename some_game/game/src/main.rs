@@ -142,7 +142,9 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         gfx.draw_image(&player.image(), player.sprite());
 
         // Draw weapon
-        gfx.draw_image(&player.weapon().image(), player.weapon().sprite());
+        // gfx.draw_image(&player.weapon().image(), player.weapon().sprite());
+        // Draw Aim Line
+        gfx.stroke_path(&[player.center(), player.weapon().center()], Color::RED);
 
         // Draw bullets
         for bullet in bullets.iter_mut(){

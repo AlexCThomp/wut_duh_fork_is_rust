@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use quicksilver::Timer;
-use quicksilver::geom::{Vector, Rectangle, Shape, Circle};
+use quicksilver::geom::{Vector, Rectangle, Shape, Circle, Line};
 use quicksilver::graphics::{Image};
 use rand::Rng;
 
@@ -201,7 +201,7 @@ impl GameObject{
                     self.weapon().position(),
                     self.weapon().image(),
                     self.weapon().size(),
-                    self.direction*12.0,
+                    self.direction*8.0,
                     self.range,
                     WeaponState::Attack,
                     false,
@@ -213,19 +213,23 @@ impl GameObject{
 
     pub fn calculate_weapon_position(&self, weapon_size: Vector) -> Vector {
         
-        // compute center of this game object
-        let center = Vector::new(
-            self.position().x + (self.size().x/2.0), 
-            self.position().y + (self.size().y/2.0));
-        
         // compute minimum radius that subsumes this object
-        let object_radius = ((self.size().x/2.0).powf(2.0) + (self.size().x/2.0).powf(2.0)).sqrt();
+        let object_radius = ((self.size().x/2.0).powf(2.0) + (self.size().x/2.0).powf(2.0)).sqrt() + weapon_size.x;
+        
+        //compute direction magnitude
+        let direction_magnitude = (self.direction.x.powf(2.0) + self.direction.y.powf(2.0)).sqrt();
+
+        //unit direction mag and object rad ratio
+        // this divides by zero and then... nothing happens?
+        // the weapon disappears and can't fire bullets (fine with me... but why?)
+        let direction_mult = object_radius/direction_magnitude;
+    
         
         // place weapon at center of this object
-        let mut weapon_position = center;
+        let mut weapon_position = self.center();
         
         // displace in this objects direction by the radius
-        let displace_vector = self.direction * (object_radius);
+        let displace_vector = self.direction * direction_mult;
         weapon_position += displace_vector;
 
         // center the weapon
@@ -319,16 +323,6 @@ impl GameObject{
     pub fn set_direction(&mut self, tilt: Vector) {
         
         self.direction = tilt;
-        // let x_mag = (1.0 - tilt.y.powf(2.0)).sqrt();
-        // let y_mag = (1.0 - tilt.x.powf(2.0)).sqrt();
-
-        // if tilt.x < 0.0 {
-        //     self.direction.x = -x_mag;
-        // } else { self.direction.x = x_mag;}
-
-        // if tilt.y < 0.0 {
-        //     self.direction.y = -y_mag;
-        // } else { self.direction.y = y_mag;}
 
     }
 
@@ -398,6 +392,16 @@ impl GameObject{
 
     pub fn position(&self) -> Vector {
         self.sprite.pos
+    }
+
+    pub fn center(&self) -> Vector {
+
+        let center = Vector::new(
+            self.position().x + (self.size().x/2.0), 
+            self.position().y + (self.size().y/2.0));
+
+        return center;
+
     }
 
     pub fn is_collidable(&self) -> bool {
