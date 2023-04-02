@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use quicksilver::Timer;
-use quicksilver::geom::{Vector, Rectangle, Shape, Circle, Line};
+use quicksilver::geom::{Vector, Rectangle, Shape, Circle};
 use quicksilver::graphics::{Image};
 use rand::Rng;
 
@@ -159,7 +159,7 @@ impl GameObject{
     pub fn move_up(&mut self) {
 
         self.image = self.images[&Direction::Up].clone();
-        let new_velocity = self.velocity.y - self.acceleration.y;
+        let new_velocity = self.velocity.y - 0.1;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.y = new_velocity;
         }
@@ -168,7 +168,7 @@ impl GameObject{
     pub fn move_down(&mut self) {
 
         self.image = self.images[&Direction::Down].clone();
-        let new_velocity = self.velocity.y + self.acceleration.y;
+        let new_velocity = self.velocity.y + 0.1;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.y = new_velocity;
         }
@@ -177,7 +177,7 @@ impl GameObject{
     pub fn move_left(&mut self) {
 
         self.image = self.images[&Direction::Left].clone();
-        let new_velocity = self.velocity.x - self.acceleration.x;
+        let new_velocity = self.velocity.x - 0.1;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.x = new_velocity;
         }
@@ -186,7 +186,7 @@ impl GameObject{
     pub fn move_right(&mut self) {
 
         self.image = self.images[&Direction::Right].clone();
-        let new_velocity = self.velocity.x + self.acceleration.x;
+        let new_velocity = self.velocity.x + 0.1;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.x = new_velocity;
         }
