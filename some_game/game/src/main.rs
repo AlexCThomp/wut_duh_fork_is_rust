@@ -52,28 +52,28 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
 
     let mut bullets: Vec<GameObject> = Vec::new();
 
-    let mut left_stick_x = 0.0;
-    let mut right_stick_x = 0.0;
-    let mut left_stick_y = 0.0;
-    let mut right_stick_y = 0.0;
+    let mut left_stick = Vector::new(0.0, 0.0);
+    let mut right_stick = Vector::new(0.0, 0.0);
 
     loop {
         while let Some(event) = input.next_event().await {
             match event {
                 Event::GamepadAxis(axis_event) => {
                     if axis_event.axis() == GamepadAxis::RightStickX {
-                        right_stick_x = axis_event.value();
+                        right_stick.x = axis_event.value();
                     }
                     if axis_event.axis() == GamepadAxis::RightStickY {
-                        right_stick_y = axis_event.value();
+                        right_stick.y = -axis_event.value();
                     }
                     if axis_event.axis() == GamepadAxis::LeftStickX {
-                        left_stick_x = axis_event.value();
+                        left_stick.x = axis_event.value();
                     }
                     if axis_event.axis() == GamepadAxis::LeftStickY {
-                        left_stick_y = axis_event.value();
+                        left_stick.y = -axis_event.value();
                     }
-                    println!("left_stick_x {} left_stick_y {}", left_stick_x, left_stick_y);
+                    // println!("left_stick x: {} y: {}", left_stick.x, left_stick.y);
+                    player.set_acceleration(left_stick);
+                    player.set_direction(right_stick);
                 },
                 Event::GamepadButton(button_event) =>{
                     if button_event.button() == GamepadButton::RightTrigger {
@@ -123,6 +123,10 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             !delete
         });
 
+        // let acceleration = player.acceleration();
+        // println!("player.acceleration x: {} y: {}", acceleration.x, acceleration.y);
+
+        player.accelerate();
         player.carry_momentum(game_map.map());
         for bullet in bullets.iter_mut(){
             bullet.carry_momentum(game_map.map());

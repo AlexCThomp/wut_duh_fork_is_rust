@@ -26,7 +26,7 @@ pub struct GameObject {
     sprite: Rectangle,
     direction: Vector,
     velocity: Vector,
-    acceleration: f32,
+    acceleration: Vector,
     max_speed: f32,
     images: HashMap<Direction, Image>,
     image: Image,
@@ -56,7 +56,7 @@ impl GameObject{
             sprite,
             direction: Vector::new(1.0, 0.0),
             velocity,
-            acceleration: 0.1,
+            acceleration: Vector::new(0.0, 0.0),
             max_speed: 4.0,
             image: image.clone(),
             images: HashMap::from([
@@ -139,7 +139,7 @@ impl GameObject{
             sprite: new_sprite,
             direction: Vector::new(1.0, 0.0),
             velocity: Vector::new(0.0,0.0),
-            acceleration: 0.1,
+            acceleration: Vector::new(0.0, 0.0),
             max_speed: 4.0,
             images: HashMap::from([
                 (Direction::Up, up_image.clone()),
@@ -159,7 +159,7 @@ impl GameObject{
     pub fn move_up(&mut self) {
 
         self.image = self.images[&Direction::Up].clone();
-        let new_velocity = self.velocity.y - self.acceleration;
+        let new_velocity = self.velocity.y - self.acceleration.y;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.y = new_velocity;
         }
@@ -168,7 +168,7 @@ impl GameObject{
     pub fn move_down(&mut self) {
 
         self.image = self.images[&Direction::Down].clone();
-        let new_velocity = self.velocity.y + self.acceleration;
+        let new_velocity = self.velocity.y + self.acceleration.y;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.y = new_velocity;
         }
@@ -177,7 +177,7 @@ impl GameObject{
     pub fn move_left(&mut self) {
 
         self.image = self.images[&Direction::Left].clone();
-        let new_velocity = self.velocity.x - self.acceleration;
+        let new_velocity = self.velocity.x - self.acceleration.x;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.x = new_velocity;
         }
@@ -186,7 +186,7 @@ impl GameObject{
     pub fn move_right(&mut self) {
 
         self.image = self.images[&Direction::Right].clone();
-        let new_velocity = self.velocity.x + self.acceleration;
+        let new_velocity = self.velocity.x + self.acceleration.x;
         if new_velocity.abs() <= self.max_speed {
             self.velocity.x = new_velocity;
         }
@@ -219,21 +219,20 @@ impl GameObject{
             self.position().y + (self.size().y/2.0));
         
         // compute minimum radius that subsumes this object
-        let object_radius = ((self.size().x/2.0) * (self.size().x/2.0) + (self.size().x/2.0) * (self.size().x/2.0)).sqrt();
+        let object_radius = ((self.size().x/2.0).powf(2.0) + (self.size().x/2.0).powf(2.0)).sqrt();
         
         // place weapon at center of this object
         let mut weapon_position = center;
-
+        
         // displace in this objects direction by the radius
-        let displace_vector = self.direction * (object_radius + (weapon_size.x/2.0));
-        weapon_position.x += displace_vector.x;
-        weapon_position.y += displace_vector.y;
+        let displace_vector = self.direction * (object_radius);
+        weapon_position += displace_vector;
 
         // center the weapon
         weapon_position.x -= weapon_size.x/2.0;
         weapon_position.y -= weapon_size.y/2.0;
 
-        weapon_position
+        return weapon_position;
 
     }
 
@@ -317,41 +316,31 @@ impl GameObject{
         
     }
 
-    pub fn move_x(&mut self, tilt: f32) {
-        let new_velocity = self.velocity.x + self.acceleration*tilt;
-        if new_velocity.abs() <= self.max_speed {
-            self.velocity.x = new_velocity;
-        }
-    }
+    pub fn set_direction(&mut self, tilt: Vector) {
+        
+        self.direction = tilt;
+        // let x_mag = (1.0 - tilt.y.powf(2.0)).sqrt();
+        // let y_mag = (1.0 - tilt.x.powf(2.0)).sqrt();
 
-    pub fn move_y(&mut self, tilt: f32) {
-        let new_velocity = self.velocity.y + self.acceleration*tilt;
-        if new_velocity.abs() <= self.max_speed {
-            self.velocity.y = new_velocity;
-        }
-    }
+        // if tilt.x < 0.0 {
+        //     self.direction.x = -x_mag;
+        // } else { self.direction.x = x_mag;}
 
-    pub fn set_direction_x(&mut self, value: f32) {
-        self.direction.x = value;
-        let y_mag = 1.0 - self.direction.x.powf(2.0);
-        if self.direction.y >= 0.0 { self.direction.y = y_mag }
-            else { self.direction.y = -y_mag }
-    }
+        // if tilt.y < 0.0 {
+        //     self.direction.y = -y_mag;
+        // } else { self.direction.y = y_mag;}
 
-    pub fn set_direction_y(&mut self, value: f32) {
-        self.direction.y = value;
-        let x_mag = 1.0 - self.direction.y.powf(2.0);
-        if self.direction.x >= 0.0 { self.direction.x = x_mag }
-            else { self.direction.x = -x_mag }
     }
 
     pub fn got_shot(&self, bullets: &Vec<GameObject>) -> bool {
+
         for bullet in bullets{
             if self.sprite.overlaps_rectangle(&bullet.sprite()){
                 return true;
             }
         }
         return false;
+
     }
 
     pub fn out_of_range(&self) -> bool {
@@ -367,8 +356,28 @@ impl GameObject{
         &self.weapon.as_ref().expect("No weapon to get")
     }
 
-    pub fn set_acceleration(&mut self, new_speed: f32) {
-        self.acceleration = new_speed;
+    pub fn accelerate(&mut self) {
+
+        let new_velocity_x = self.velocity.x + self.acceleration.x;
+        if new_velocity_x.abs() <= self.max_speed {
+            self.velocity.x = new_velocity_x;
+        }
+
+        let new_velocity_y = self.velocity.y + self.acceleration.y;
+        if new_velocity_y.abs() <= self.max_speed {
+            self.velocity.y = new_velocity_y;
+        }
+        
+    }
+
+    pub fn set_acceleration(&mut self, tilt: Vector) {
+        
+        self.acceleration = tilt*0.1;
+        
+    }
+
+    pub fn acceleration(&self) -> Vector {
+        return self.acceleration;
     }
 
     pub fn image(&self) -> &Image {
