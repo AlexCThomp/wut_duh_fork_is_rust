@@ -38,7 +38,7 @@ pub struct GameMap {
 
 impl GameMap {
 
-    pub fn new(wall_image: Image, floor_image: Image) -> GameMap {
+    pub fn new(wall_image: &Image, floor_image: &Image) -> GameMap {
         let mut new_map:Vec<GameObject> = Vec::new();
         for (y, el) in MAP_1.iter().enumerate() {
             for (x, obj_type) in el.iter().enumerate(){
@@ -52,7 +52,7 @@ impl GameMap {
 
                     new_map.push(GameObject::new_floor(
                         position,
-                        floor_image.clone()
+                        floor_image
                     ));
 
                 }
@@ -60,7 +60,7 @@ impl GameMap {
 
                     new_map.push(GameObject::new_wall(
                         position,
-                        wall_image.clone()
+                        wall_image
                     ));
                     
                 }
@@ -76,4 +76,5 @@ impl GameMap {
     pub fn map(&self) -> &Vec<GameObject> {
         &self.map
     }
+
 }

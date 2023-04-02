@@ -1,9 +1,10 @@
 use game_objects::game_map::GameMap;
 use game_objects::game_object::{
     GameObject, 
-    WeaponState, Direction,
+    Direction,
 };
 
+use quicksilver::input::{Event, GamepadAxis, GamepadButton};
 use quicksilver::{
     geom::{Vector},
     graphics::{Color, Image},
@@ -22,39 +23,68 @@ fn main() {
 }
 
 async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> {
-    let player_image = Image::load(&gfx, r"green_circle.png").await?;
-    let enemy_image = Image::load(&gfx, r"green_circle.png").await?;
-    let weapon_image = Image::load(&gfx, r"green_circle.png").await?;
-    let death_image = Image::load(&gfx, r"red_x.png").await?;
-    let wall_image = Image::load(&gfx, r"wall.png").await?;
-    let floor_image = Image::load(&gfx, r"floor.png").await?;
 
-    let game_map = GameMap::new(wall_image, floor_image);
-    
+    let arrow_up = Image::load(&gfx, r"arrow_up.png").await?;
+    let arrow_left = Image::load(&gfx, r"arrow_left.png").await?;
+    let arrow_down = Image::load(&gfx, r"arrow_down.png").await?;
+    let arrow_right = Image::load(&gfx, r"arrow_right.png").await?;
+
+    let circle_image = Image::load(&gfx, r"circle.png").await?;
+    let death_image = Image::load(&gfx, r"x.png").await?;
+    let wall_image = Image::load(&gfx, r"barrier.png").await?;
+    let floor_image = Image::load(&gfx, r"ice.png").await?;
+
+    let game_map = GameMap::new(&wall_image, &floor_image);
+
     let mut player = GameObject::new_with_weapon(
         Vector::new(32.0, 32.0),  
-        player_image.clone(),
-        weapon_image,
+        &arrow_up,
+        &arrow_left,
+        &arrow_down,
+        &arrow_right,
+        &circle_image
     );
 
-    let mut enemy = GameObject::new(
-        Vector::new(600.0, 300.0), 
-        enemy_image.clone(),
-        Vector::new(32.0, 32.0),
-        0.0,
-        WeaponState::Attack,
-        true,
-    );
-    
+    let mut enemies: Vec<GameObject> = Vec::new();
+    for _ in 0..1 {
+        enemies.push(GameObject::new_random_enemy(&circle_image));
+    }
+
+    let mut bullets: Vec<GameObject> = Vec::new();
+
+    let mut left_stick_x = 0.0;
+    let mut right_stick_x = 0.0;
+    let mut left_stick_y = 0.0;
+    let mut right_stick_y = 0.0;
+
     loop {
-        while let Some(_) = input.next_event().await {}
-
-        // player.set_image(player_image.clone());
-        // enemy.set_image(enemy_image.clone());
-
-        player.un_attack();
-
-        // moves
+        while let Some(event) = input.next_event().await {
+            match event {
+                Event::GamepadAxis(axis_event) => {
+                    if axis_event.axis() == GamepadAxis::RightStickX {
+                        right_stick_x = axis_event.value();
+                    }
+                    if axis_event.axis() == GamepadAxis::RightStickY {
+                        right_stick_y = axis_event.value();
+                    }
+                    if axis_event.axis() == GamepadAxis::LeftStickX {
+                        left_stick_x = axis_event.value();
+                    }
+                    if axis_event.axis() == GamepadAxis::LeftStickY {
+                        left_stick_y = axis_event.value();
+                    }
+                    println!("left_stick_x {} left_stick_y {}", left_stick_x, left_stick_y);
+                },
+                Event::GamepadButton(button_event) =>{
+                    if button_event.button() == GamepadButton::RightTrigger {
+                        player.shoot(&mut bullets);
+                    }
+                },
+                _ => (),
+            }
+        }
+  
+        //move
         if input.key_down(Key::A) {
             player.move_left();
         }
@@ -70,33 +100,33 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
 
         // direction changes
         if input.key_down(Key::Left) {
-            player.set_direction(Direction::Left);
+            player.update_direction(Direction::Left);
         }
         if input.key_down(Key::Right) {
-            player.set_direction(Direction::Right);
+            player.update_direction(Direction::Right);
         }
         if input.key_down(Key::Up) {
-            player.set_direction(Direction::Up);
+            player.update_direction(Direction::Up);
         }
         if input.key_down(Key::Down) {
-            player.set_direction(Direction::Down);
+            player.update_direction(Direction::Down);
         }
         if input.key_down(Key::Space) {
-            player.attack();
+            player.shoot(&mut bullets);
         }
 
-        if player.collides_with(&enemy) {
-            player.set_image(death_image.clone());
-        }
+        // cull bullets
+        bullets.retain(|bullet| {
+            let delete = {
+                bullet.out_of_range()
+            };
+            !delete
+        });
 
-        if player.weapon().collides_with(&enemy) && player.weapon_state() == WeaponState::Attack {
-            enemy.set_image(death_image.clone());
-        }
-        
         player.carry_momentum(game_map.map());
-        
-        // player.fall(game_map.map());
-        // enemy.fall(game_map.map());
+        for bullet in bullets.iter_mut(){
+            bullet.carry_momentum(game_map.map());
+        }
 
         gfx.clear(Color::WHITE);
         // Draw Map
@@ -108,10 +138,33 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         gfx.draw_image(&player.image(), player.sprite());
 
         // Draw weapon
-        gfx.draw_image(&player.weapon().image() ,player.weapon().sprite());
+        gfx.draw_image(&player.weapon().image(), player.weapon().sprite());
 
-        //Draw enemy
-        gfx.draw_image(&enemy.image(), enemy.sprite());
+        // Draw bullets
+        for bullet in bullets.iter_mut(){
+            gfx.draw_image(&bullet.image(), bullet.sprite());
+        }
+
+        // cull dead enemies
+        enemies.retain(|enemy| {
+            let delete = {enemy.got_shot(&bullets)};
+            !delete
+        });
+
+        // Draw enemies
+        for enemy in enemies.iter_mut() {
+            for bullet in bullets.iter() {
+                if bullet.collides_with(enemy){
+                    enemy.set_image(death_image.clone());
+                }
+            }
+            if enemy.collides_with(&player) {
+                player.set_image(death_image.clone());
+            }
+            // enemy.move_towards(player.position());
+            enemy.carry_momentum(game_map.map());
+            gfx.draw_image(&enemy.image(), enemy.sprite());
+        }
 
         gfx.present(&window)?;
     }
