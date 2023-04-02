@@ -4,6 +4,7 @@ use game_objects::game_object::{
     Direction,
 };
 
+use quicksilver::input::{Event, GamepadAxis, GamepadButton};
 use quicksilver::{
     geom::{Vector},
     graphics::{Color, Image},
@@ -45,16 +46,45 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     );
 
     let mut enemies: Vec<GameObject> = Vec::new();
-    for _ in 0..10 {
+    for _ in 0..1 {
         enemies.push(GameObject::new_random_enemy(&circle_image));
     }
 
     let mut bullets: Vec<GameObject> = Vec::new();
-    
-    loop {
-        while let Some(_) = input.next_event().await {}
 
-        // moves
+    let mut left_stick_x = 0.0;
+    let mut right_stick_x = 0.0;
+    let mut left_stick_y = 0.0;
+    let mut right_stick_y = 0.0;
+
+    loop {
+        while let Some(event) = input.next_event().await {
+            match event {
+                Event::GamepadAxis(axis_event) => {
+                    if axis_event.axis() == GamepadAxis::RightStickX {
+                        right_stick_x = axis_event.value();
+                    }
+                    if axis_event.axis() == GamepadAxis::RightStickY {
+                        right_stick_y = axis_event.value();
+                    }
+                    if axis_event.axis() == GamepadAxis::LeftStickX {
+                        left_stick_x = axis_event.value();
+                    }
+                    if axis_event.axis() == GamepadAxis::LeftStickY {
+                        left_stick_y = axis_event.value();
+                    }
+                    println!("left_stick_x {} left_stick_y {}", left_stick_x, left_stick_y);
+                },
+                Event::GamepadButton(button_event) =>{
+                    if button_event.button() == GamepadButton::RightTrigger {
+                        player.shoot(&mut bullets);
+                    }
+                },
+                _ => (),
+            }
+        }
+  
+        //move
         if input.key_down(Key::A) {
             player.move_left();
         }
@@ -67,7 +97,6 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         if input.key_down(Key::S) {
             player.move_down();
         }
-
 
         // direction changes
         if input.key_down(Key::Left) {
@@ -132,7 +161,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             if enemy.collides_with(&player) {
                 player.set_image(death_image.clone());
             }
-            enemy.move_towards(player.position());
+            // enemy.move_towards(player.position());
             enemy.carry_momentum(game_map.map());
             gfx.draw_image(&enemy.image(), enemy.sprite());
         }

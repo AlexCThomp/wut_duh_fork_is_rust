@@ -317,6 +317,34 @@ impl GameObject{
         
     }
 
+    pub fn move_x(&mut self, tilt: f32) {
+        let new_velocity = self.velocity.x + self.acceleration*tilt;
+        if new_velocity.abs() <= self.max_speed {
+            self.velocity.x = new_velocity;
+        }
+    }
+
+    pub fn move_y(&mut self, tilt: f32) {
+        let new_velocity = self.velocity.y + self.acceleration*tilt;
+        if new_velocity.abs() <= self.max_speed {
+            self.velocity.y = new_velocity;
+        }
+    }
+
+    pub fn set_direction_x(&mut self, value: f32) {
+        self.direction.x = value;
+        let y_mag = 1.0 - self.direction.x.powf(2.0);
+        if self.direction.y >= 0.0 { self.direction.y = y_mag }
+            else { self.direction.y = -y_mag }
+    }
+
+    pub fn set_direction_y(&mut self, value: f32) {
+        self.direction.y = value;
+        let x_mag = 1.0 - self.direction.y.powf(2.0);
+        if self.direction.x >= 0.0 { self.direction.x = x_mag }
+            else { self.direction.x = -x_mag }
+    }
+
     pub fn got_shot(&self, bullets: &Vec<GameObject>) -> bool {
         for bullet in bullets{
             if self.sprite.overlaps_rectangle(&bullet.sprite()){
