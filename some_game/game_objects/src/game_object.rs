@@ -240,6 +240,16 @@ impl GameObject{
 
     }
 
+    pub fn patrol_for(&mut self, target: &GameObject) {
+        if self.in_range(target) {
+            self.move_towards(target.position());
+        }
+        else {
+            let x_coord = rand::thread_rng().gen_range(200..800) as f32;
+            let y_coord = rand::thread_rng().gen_range(100..700) as f32;
+            self.move_towards(Vector::new(x_coord, y_coord));
+        }
+    }
 
     pub fn move_towards(&mut self, target_location: Vector) {
     
