@@ -1,9 +1,12 @@
+use std::num::NonZeroUsize;
+
 use game_objects::game_map::GameMap;
 use game_objects::game_object::{
     GameObject, 
     Direction,
 };
 
+use quicksilver::Timer;
 use quicksilver::input::{Event, GamepadAxis, GamepadButton};
 use quicksilver::{
     geom::{Vector},
@@ -35,6 +38,9 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     let floor_image = Image::load(&gfx, r"ice.png").await?;
 
     let game_map = GameMap::new(&wall_image, &floor_image);
+
+    let mut enemy_spawn_timer = Timer::time_per_second(0.2);
+
 
     let mut player = GameObject::new_with_weapon(
         Vector::new(32.0, 32.0),  
@@ -157,6 +163,12 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             !delete
         });
 
+        // spawn new enemies
+        if enemy_spawn_timer.exhaust() >= NonZeroUsize::new(1) {
+            enemies.push(GameObject::new_random_enemy(&circle_image));
+            enemy_spawn_timer.reset();
+        }
+        
         // Draw enemies
         for enemy in enemies.iter_mut() {
             for bullet in bullets.iter() {
