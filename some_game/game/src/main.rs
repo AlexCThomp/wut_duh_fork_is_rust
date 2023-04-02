@@ -179,7 +179,9 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             if enemy.collides_with(&player) {
                 player.set_image(death_image.clone());
             }
-            enemy.move_towards(player.position());
+            if enemy.in_range(&player){
+                enemy.move_towards(player.position());
+            }
             enemy.carry_momentum(game_map.map());
             gfx.draw_image(&enemy.image(), enemy.sprite());
         }

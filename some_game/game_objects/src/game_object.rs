@@ -101,7 +101,7 @@ impl GameObject{
             image,
             Vector::new(12.0, 12.0),
             Vector::new(0.0,0.0),
-            0.0,
+            300.0,
             WeaponState::Attack,
             true,
         )
@@ -339,7 +339,14 @@ impl GameObject{
 
     pub fn out_of_range(&self) -> bool {
         let range_radius = Circle::new(self.start_position, self.range);
-        !self.sprite().overlaps_circle(&range_radius)
+        return !self.sprite().overlaps_circle(&range_radius);
+    }
+
+    pub fn in_range(&self, target: &GameObject) -> bool {
+        
+        let range_radius = Circle::new(self.position(), self.range);
+        return target.sprite().overlaps_circle(&range_radius);
+
     }
 
     pub fn set_weapon(&mut self, new_weapon: GameObject) {
